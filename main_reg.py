@@ -14,7 +14,7 @@ from datas.data_gdsc_reg import GDSCMetaLearningSystemDataLoader
 from datas.data_expert_reg import EXPERTMetaLearningSystemDataLoader
 from datas.data_pqsar_Assay_reg import PQSARMetaLearningSystemDataLoader
 from datas.data_fsmol_Assay_reg import FsmolMetaLearningSystemDataLoader
-from learning_system.few_shot_learning_system_assay_reg import MAMLRegressor
+from learning_system.system_meta_delta import MAMLRegressor
 
 def get_args():
     parser = argparse.ArgumentParser(description='MetaMix')
@@ -165,7 +165,7 @@ if __name__ == '__main__':
 
     print(exp_string)
 
-def train(args, maml, optimiser, dataloader):
+def train(args, maml, dataloader):
     Print_Iter = 200
     print_loss, print_acc, print_loss_support = 0.0, 0.0, 0.0
 
@@ -217,128 +217,6 @@ def train(args, maml, optimiser, dataloader):
                 json.dump(res_dict, open(os.path.join(write_dir, f"sup_num_{args.test_sup_num}.json"), "w"))
 
 
-import pickle
-def weighted_meta_learning(args, maml, dataloader, model_file):
-    # train_data_all = dataloader.get_train_batches_weighted()
-    # init_weight = maml.get_init_weight()
-    # train_weights_all = []
-    # train_assay_names_all = []
-    # loss_all = []
-    # assay_cls_idx_all = []
-    # for train_idx, cur_data in tqdm(enumerate(train_data_all)):
-    #     train_assay_names_all.append(cur_data[3][0])
-    #     loss, _, final_weights, _, _ = maml.run_validation_iter(cur_data)
-    #     loss_all.append(loss['loss'].detach().cpu().item())
-    #     if args.cluster_meta:
-    #         # print(maml.assay_cls_idx_cache)
-    #         task_weight = final_weights[0]["layer_dict.linear_cluster.weights"].detach().cpu().numpy()
-    #         task_feat = task_weight[maml.assay_cls_idx_cache, :]
-    #         assay_cls_idx_all.append(maml.assay_cls_idx_cache)
-    #     else:
-    #         task_weight = final_weights[0]["layer_dict.linear.weights"].detach().cpu().numpy().squeeze()
-    #         task_feat = task_weight - init_weight
-    #     train_weights_all.append(task_feat)
-    #     if (train_idx+1)%200 == 0:
-    #         print(sum(loss_all) / len(loss_all))
-    #
-    # print(sum(loss_all)/len(loss_all))
-    # save_dir = "./scripts/t-sne/chembl_indomain_trainset"
-    # os.system(f"mkdir -p {save_dir}")
-    # np.save(f"{save_dir}/lastlayer_weights", np.array(train_weights_all))
-    # np.save(f"{save_dir}/assay_cls_idx", np.array(assay_cls_idx_all))
-    # json.dump(train_assay_names_all, open(f"{save_dir}/assay_ids.json", "w"))
-    # exit()
-
-    train_data_all = dataloader.get_test_batches()
-
-    save_dir = "./scripts/t-sne/ligands_chembl_indomain_test"
-    os.system(f"mkdir -p {save_dir}")
-    for train_idx, cur_data in tqdm(enumerate(train_data_all)):
-        ligand_num = len(cur_data[1][0])
-        x_task = cur_data[0][0]
-        y_task = cur_data[1][0]
-        x_task = x_task.float().cuda()
-        assay_name = cur_data[3][0].replace("/", "_")
-        feat, _ = maml.regressor.forward_feat(x=x_task, num_step=0)
-        feat = feat.detach()
-        # pred_y = pred_y.detach().cpu().numpy()
-        # r2 = np.corrcoef(y_task, pred_y)[0, 1]
-        # print(assay_name, r2)
-        np.save(f"{save_dir}/{assay_name}", feat.cpu().numpy())
-        np.save(f"{save_dir}/{assay_name}_y", y_task)
-    exit()
-
-    train_weights_all = np.load("./scripts/t-sne/chembl_indomain_trainset/lastlayer_weights.npy")
-    train_assay_names_all = json.load(open("./scripts/t-sne/chembl_indomain_trainset/assay_ids.json", "r"))
-    assay_names = dataloader.dataset.assaes
-    assay_names_dict = {x: i for i, x in enumerate(assay_names)}
-    train_assay_idxes = [assay_names_dict[assay_name] for assay_name in train_assay_names_all]
-
-    init_weight = maml.get_init_weight()
-    test_data_all = list(dataloader.get_test_batches())
-    test_weights_all = []
-    for test_idx, cur_data in tqdm(enumerate(test_data_all)):
-        loss, _, final_weights, _, _ = maml.run_validation_iter(cur_data)
-        if args.use_vampire:
-            task_weight = final_weights[0]["layer_dict.vampire.mean"].detach().cpu().numpy().squeeze()
-        else:
-            task_weight = final_weights[0]["layer_dict.linear.weights"].detach().cpu().numpy().squeeze()
-        task_feat = task_weight - init_weight
-        test_weights_all.append(task_feat)
-
-    def compute_dist(weight_list1, weight_list2):
-        weight1 = np.array(weight_list1)
-        weight2 = np.array(weight_list2)
-        return np.dot(weight1, weight2.transpose()) / (np.expand_dims(np.linalg.norm(weight1, axis=-1), axis=-1) *
-                                                       np.expand_dims(np.linalg.norm(weight2, axis=-1), axis=0) )
-
-    # train_weights_all = copy.deepcopy(test_weights_all)
-    B = compute_dist(train_weights_all, test_weights_all)
-
-    from torch import optim
-    res_dict = {}
-    self_weight = 0.1
-    k = args.weight_k
-    lr = args.meta_lr
-
-    for test_idx, cur_test_data in enumerate(test_data_all[:200]):
-        maml.load_state_dict(torch.load(model_file))
-        maml.optimizer = optim.Adam(maml.get_weighted_training_param(), lr=lr , amsgrad=False)
-        assay_weights = B[:, test_idx]
-
-        topk_idx = np.argpartition(assay_weights, -k)[-k:]
-
-        assay_name = cur_test_data[3][0]
-        print(assay_name)
-        res_dict[assay_name] = {"topk_weights": None, "res": []}
-        res = testdG_single_assay(maml, cur_test_data)
-        res_dict[assay_name]["res"].append(res)
-        if topk_idx is None or len(topk_idx) < 4:
-            continue
-
-        topk_weights = assay_weights[topk_idx]
-        res_dict[assay_name]["topk_weights"] = topk_weights
-        topk_weights = topk_weights / 0.1
-        topk_weights_scale = k * np.exp(topk_weights)/sum(np.exp(topk_weights))
-        topk_dataset_idx = [train_assay_idxes[x] for x in topk_idx]
-        for epoch in range(6):
-            weighted_train_data_all = dataloader.get_train_batches_weighted(topk_weights_scale, topk_dataset_idx, 20, True)
-            print_loss = 0.0
-            print_test_loss = 0.0
-            total_step = 0
-            for step, cur_data in enumerate(weighted_train_data_all):
-                # !!在weighted loss的设定下，只finetune最后一层，还是说前面的一块finetune，需要有一个答案
-                meta_batch_loss, test_sup_loss = maml.run_weighted_train_iter(cur_data, epoch+43, cur_test_data, self_weight)
-                print_loss += meta_batch_loss['loss']
-                print_test_loss += test_sup_loss['loss']
-                total_step += 1
-            print('epoch:{}, train loss:{}, sup loss:{}'.format(epoch, print_loss/total_step, print_test_loss/total_step))
-            res = testdG_single_assay(maml, cur_test_data)
-            res_dict[assay_name]["res"].append((res, print_loss/total_step, print_test_loss/total_step))
-        print()
-    pickle.dump(res_dict, open(f"./res_chembl_davis/res_dict_self_{self_weight}_{k}_10_lr{lr}.pkl", "wb"))
-
-import pickle
 def knn_meta_learning(args, maml, dataloader, model_file):
     train_weights_all = np.load("./scripts/t-sne/chembl_indomain_trainset/lastlayer_weights.npy")
     train_assay_names_all = json.load(open("./scripts/t-sne/chembl_indomain_trainset/assay_ids.json", "r"))
@@ -399,8 +277,6 @@ def knn_meta_learning(args, maml, dataloader, model_file):
         res = testdG_single_assay(maml, cur_test_data, weighted_train_data_all)
         afters.append(res[0])
     print(np.mean(befores), np.mean(afters), len(befores))
-
-
 
 
 def testdG_single_assay(maml, cur_test_data, weighted_train_data_all=None):
@@ -471,7 +347,7 @@ def testdG(args, epoch, maml, dataloader, is_test=True):
             test_data_all = dataloader.get_val_batches()
         for step, cur_data in enumerate(test_data_all):
             loss, per_task_target_preds, final_weights, sup_losses, _ = maml.run_validation_iter(cur_data)
-            support_loss_each_step = sup_losses[0]['support_loss_each_step']
+            support_loss_each_step = sup_losses[0]
             # loss_pred_zero = sup_losses[0]['loss_pred_zero']
 
             y = cur_data[1][0].numpy()  # 4:data format, 0:a list, 0:task
@@ -545,22 +421,8 @@ def testdG(args, epoch, maml, dataloader, is_test=True):
     return res_dict, mean_r2-rmse_i+1
 
 
-def case_study_test_fep(args, maml, dataloader, model_file):
-    fep_test_data_all = dataloader.get_test_batches()
-    for cur_data in fep_test_data_all:
-        loss, per_task_target_preds, final_weights, sup_losses, _ = maml.run_validation_iter(cur_data)
-        loss_all.append(loss['loss'].detach().cpu().item())
-
-
-
 def main():
     maml = MAMLRegressor(args=args, input_shape=(2, args.dim_w))
-
-    # model_file = '{0}/{2}/model_{1}'.format(args.logdir, args.test_epoch, exp_string)
-    # maml.load_state_dict(torch.load(model_file))
-    # init_weight = maml.get_init_weight()
-    # np.save("./PLS/init.npy", init_weight)
-    # exit()
 
     if args.resume == 1 and args.train == 1:
         model_file = '{0}/{2}/model_{1}'.format(args.logdir, args.test_epoch, exp_string)
@@ -584,9 +446,6 @@ def main():
     elif args.datasource == "pqsar":
         dataloader = PQSARMetaLearningSystemDataLoader(args, target_assay=args.target_assay_list,
                                                        exp_string=exp_string)
-    # elif args.datasource == "covid":
-    #     dataloader = COVIDMetaLearningSystemDataLoader(args, target_assay=args.target_assay_list,
-    #                                                    exp_string=exp_string)
     elif args.datasource in ["ood", "kiba", "covid"]:
         dataloader = EXPERTMetaLearningSystemDataLoader(args, target_assay=args.target_assay_list,
                                                         exp_string=exp_string)
@@ -595,7 +454,7 @@ def main():
                                                        exp_string=exp_string)
 
     if args.train == 1:
-        train(args, maml, meta_optimiser, dataloader)
+        train(args, maml, dataloader)
     elif args.train == 0:
         args.meta_batch_size = 1
         model_file = '{0}/{2}/model_{1}'.format(args.logdir, args.test_epoch, exp_string)
@@ -619,78 +478,12 @@ def main():
             print("write result to", write_dir, f"sup_num_{args.test_sup_num}.json")
             print("\n\n\n\n")
             json.dump(res_dict, open(os.path.join(write_dir, f"sup_num_{args.test_sup_num}.json"), "w"))
-    elif args.train == 3:
-        model_file = '{0}/{2}/model_{1}'.format(args.logdir, args.test_epoch, exp_string)
-        maml.load_state_dict(torch.load(model_file))
-        test_assays(args, args.test_epoch, maml, dataloader)
-        # test_BDB_assays(args, args.test_epoch, maml, dataloader)
     elif args.train == 4:
         model_file = '{0}/{2}/model_{1}'.format(args.logdir, args.test_epoch, exp_string)
         if not os.path.exists(model_file):
             model_file = '{0}/{1}/model_best'.format(args.logdir, exp_string)
         maml.load_state_dict(torch.load(model_file), strict=False)
-        weighted_meta_learning(args, maml, dataloader, model_file)
-    elif args.train == 5:
-        args.meta_batch_size = 1
+        knn_meta_learning(args, maml, dataloader, model_file)
 
-        best_epoch = -1
-        best_r2 = -1
-        for epoch_i in range(35, 50):
-            args.test_epoch = epoch_i
-            model_file = '{0}/{2}/model_{1}'.format(args.logdir, args.test_epoch, exp_string)
-            if not os.path.exists(model_file):
-                continue
-
-            if not isinstance(args.test_sup_num, list):
-                args.test_sup_num = [args.test_sup_num]
-            test_sup_num_all = copy.deepcopy(args.test_sup_num)
-            for test_sup_num in test_sup_num_all:
-                args.test_sup_num = test_sup_num
-                try:
-                    maml.load_state_dict(torch.load(model_file))
-                except Exception as e:
-                    print(e)
-                    maml.load_state_dict(torch.load(model_file), strict=False)
-                _, res_r2 = testdG(args, args.test_epoch, maml, dataloader, is_test=True)
-                if res_r2 > best_r2:
-                    best_r2 = res_r2
-                    best_epoch = epoch_i
-                    print("best valid epoch is", best_epoch)
-        best_model_file = '{0}/{2}/model_{1}'.format(args.logdir, best_epoch, exp_string)
-        model_file = '{0}/{1}/model_best_ontest'.format(args.logdir, exp_string)
-        print(f"copy best file {best_model_file} to {model_file}")
-        os.system(f"cp {best_model_file} {model_file}")
-    elif args.train == 6:
-        args.meta_batch_size = 1
-
-        best_lr = -1
-        best_r2 = -1
-        model_file = '{0}/{2}/model_{1}'.format(args.logdir, args.test_epoch, exp_string)
-        if not os.path.exists(model_file):
-            model_file = '{0}/{1}/model_best'.format(args.logdir, exp_string)
-        for lr in [0.001, 0.002, 0.004, 0.008, 0.016, 0.032, 0.064]:
-            args.transfer_lr = lr
-
-            if not isinstance(args.test_sup_num, list):
-                args.test_sup_num = [args.test_sup_num]
-            test_sup_num_all = copy.deepcopy(args.test_sup_num)
-            for test_sup_num in test_sup_num_all:
-                args.test_sup_num = test_sup_num
-                try:
-                    maml.load_state_dict(torch.load(model_file))
-                except Exception as e:
-                    print(e)
-                    maml.load_state_dict(torch.load(model_file), strict=False)
-                _, res_r2 = testdG(args, args.test_epoch, maml, dataloader, is_test=False)
-                if res_r2 > best_r2:
-                    best_r2 = res_r2
-                    best_lr = lr
-                    print("best valid lr is", best_lr)
-    elif args.train == 7:
-        model_file = '{0}/{2}/model_{1}'.format(args.logdir, args.test_epoch, exp_string)
-        if not os.path.exists(model_file):
-            model_file = '{0}/{1}/model_best'.format(args.logdir, exp_string)
-        maml.load_state_dict(torch.load(model_file), strict=False)
-        case_study_test_fep(args, maml, dataloader, model_file)
 if __name__ == '__main__':
     main()
