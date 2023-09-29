@@ -127,7 +127,7 @@ class LSLRGradientDescentLearningRule(nn.Module):
         #     lr_b = self.names_learning_rates_b[key.replace(".", "-")][num_step]
         #     updated_names_weights_dict[key] = names_weights_dict[key] - \
         #                                       (lr_k*sup_number+lr_b) * names_grads_wrt_params_dict[key]
-        if self.args.transfer_l:
+        if "transfer" in self.args.model_name.lower():
             lr = self.args.transfer_lr
         else:
             if self.args.use_byhand_lr:

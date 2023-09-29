@@ -4,10 +4,11 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+import math
 import random
 import pickle
 
-from models.meta_neural_network_architectures import FCNReLUNormNetworkQSAR, AssayFCNReLUNormNetworkReg, AssayAttn
+from models.meta_neural_network_architectures import FCNReLUNormNetworkQSAR, AssayFCNReLUNormNetworkReg
 from inner_loop_optimizers import LSLRGradientDescentLearningRule
 
 
@@ -60,6 +61,34 @@ class RegressorBase(nn.Module):
                                                               T_max=self.args.metatrain_iterations,
                                                               eta_min=self.args.min_learning_rate)
 
+    def cossim_matrix(self, a, b, eps=1e-8):
+        """
+        added eps for numerical stability
+        """
+        a_n, b_n = a.norm(dim=1)[:, None], b.norm(dim=1)[:, None]
+        a_norm = a / torch.clamp(a_n, min=eps)
+        b_norm = b / torch.clamp(b_n, min=eps)
+        sim_mt = torch.mm(a_norm, b_norm.transpose(0, 1))
+        return sim_mt
+
+    def get_sim_matrix(self, a, b):
+        a_bool = (a > 0.).float()
+        b_bool = (b > 0.).float()
+        and_res = torch.mm(a_bool, b_bool.transpose(0, 1))
+        or_res = a.shape[-1] - torch.mm((1. - a_bool), (1. - b_bool).transpose(0, 1))
+        sim = and_res / or_res
+        return sim
+
+    def robust_square_error(self, a, b, topk_idx):
+        abs_diff = torch.abs(a - b)
+        square_mask = (abs_diff <= 2).float()
+        linear_mask = 1. - square_mask
+        square_error = (a - b) ** 2
+        linear_error = 1. * (abs_diff - 2) + 4
+        loss = square_error * square_mask + linear_error * linear_mask
+
+        loss_select = torch.gather(loss, 0, topk_idx)
+        return torch.mean(loss_select)
 
     def get_per_step_loss_importance_vector(self):
         loss_weights = np.ones(shape=(self.args.num_updates)) * (
@@ -120,7 +149,7 @@ class RegressorBase(nn.Module):
 
     def get_init_weight(self):
         init_weight = self.get_inner_loop_parameter_dict(self.regressor.named_parameters())
-        init_weight = init_weight["layer_dict.linear.weights"].detach().cpu().numpy().squeeze()
+        init_weight = init_weight["layer_dict.linear.weights"]
         return init_weight
 
     def inner_loop(self, x_task, y_task, assay_idx, split, is_training_phase, epoch, num_steps):
@@ -144,15 +173,11 @@ class RegressorBase(nn.Module):
             if support_loss >= support_loss_each_step[0] * 10 or sup_num <= 5:
                 pass
             else:
-                try:
-                    names_weights_copy = self.apply_inner_loop_update(loss=support_loss,
-                                                                      names_weights_copy=names_weights_copy,
-                                                                      use_second_order=use_second_order if is_training_phase else False,
-                                                                      current_step_idx=num_step,
-                                                                      sup_number=torch.sum(split))
-                except Exception as e:
-                    print(e)
-                    pass
+                names_weights_copy = self.apply_inner_loop_update(loss=support_loss,
+                                                                  names_weights_copy=names_weights_copy,
+                                                                  use_second_order=use_second_order if is_training_phase else False,
+                                                                  current_step_idx=num_step,
+                                                                  sup_number=torch.sum(split))
 
             if is_training_phase:
                 is_multi_step_optimize = self.args.use_multi_step_loss_optimization and epoch < self.args.multi_step_loss_num_epochs
@@ -173,7 +198,32 @@ class RegressorBase(nn.Module):
                         
         return names_weights_copy, support_loss_each_step, task_losses
 
-    def forward(self, data_batch, epoch, num_steps, is_training_phase):
+    def get_metric(self, y, y_pred, split):
+        sup_idx = torch.nonzero(split)[:, 0]
+        tgt_idx = torch.nonzero(1. - split)[:, 0]
+        y_true = y[tgt_idx]
+        y_train_mean = torch.mean(y[sup_idx]).cpu().item()
+        y_true = y_true.cpu().numpy()
+        y_pred = y_pred.detach().cpu().numpy()
+
+        rmse = np.sqrt(np.mean((y_true - y_pred) ** 2))
+
+        r2 = np.corrcoef(y_true, y_pred)[0, 1]
+        if math.isnan(r2) or r2 < 0.:
+            r2 = 0.
+        else:
+            r2 = r2 ** 2
+
+        numerator = ((y_true - y_pred) ** 2).sum(axis=0, dtype=np.float64)
+        denominator = ((y_true - y_train_mean) ** 2).sum(axis=0, dtype=np.float64)
+        if denominator == 0:
+            R2os = 0.0
+        else:
+            R2os = 1.0 - (numerator / denominator)
+        return {"r2": float(r2), "rmse": float(rmse), "R2os": float(R2os), "y_train_mean": y_train_mean,
+                "pred": [float(x) for x in y_pred], "ture": [float(x) for x in y_true]}
+
+    def forward(self, data_batch, epoch, num_steps, is_training_phase, **kwargs):
         raise NotImplementedError
 
     def net_forward(self, x, y, split, weights, backup_running_statistics, training, num_step, assay_idx=None,
@@ -213,11 +263,11 @@ class RegressorBase(nn.Module):
     def run_validation_iter(self, data_batch):
         if self.training:
             self.eval()
-        losses, per_task_target_preds, final_weights, sup_losses = self.forward(data_batch=data_batch,
+        losses, per_task_target_preds, final_weights, per_task_metrics = self.forward(data_batch=data_batch,
                                                                                 epoch=self.current_epoch,
                                                                                 num_steps=self.args.test_num_updates,
                                                                                 is_training_phase=False)
-        return losses, per_task_target_preds, final_weights, sup_losses
+        return losses, per_task_target_preds, final_weights, per_task_metrics
 
     def save_model(self, model_save_dir, state):
         state['network'] = self.state_dict()

@@ -30,7 +30,7 @@ def read_BDB_per_assay():
                     # affi_prefix = pic50_exp[0]
                     # pic50_exp = pic50_exp[1:]
                 try:
-                    pic50_exp = 9 - math.log10(float(pic50_exp))
+                    pic50_exp = -math.log10(float(pic50_exp))
                 except:
                     print("error ic50s:", pic50_exp)
                     continue
@@ -41,7 +41,7 @@ def read_BDB_per_assay():
                     "affi_prefix": affi_prefix,
                     "smiles": smiles,
                     "pic50_exp": pic50_exp,
-                    "domain": "chembl"
+                    "domain": "bdb"
                 }
                 ligands.append(ligand_info)
             
@@ -82,8 +82,8 @@ def read_BDB_merck():
         opls4_res = []
         errors = []
         for ligand_info in v:
-            pic50_exp = -float(ligand_info["exp_dg"]) / 1.38
-            opls4 = -float(ligand_info["pred_dg"]) / 1.38
+            pic50_exp = -float(ligand_info["exp_dg"])
+            opls4 = -float(ligand_info["pred_dg"])
             errors.append(pic50_exp - opls4)
             opls4_res.append(opls4)
             smiles = ligand_info["smiles"]
@@ -158,12 +158,12 @@ def read_davis():
         for i, affi in enumerate(affis):
             if not np.isnan(affi) and affi < 10000:
                 ligand_id, smiles = ligand_list[i]
-                pic50s.append(9-math.log10(affi))
+                pic50s.append(-math.log10(affi))
                 ligand_info = {
                     "affi_prefix": "",
                     "smiles": smiles,
                     "ligand_id": ligand_id,
-                    "pic50_exp": 9-math.log10(affi)
+                    "pic50_exp": -math.log10(affi)
                     }
                 ligands.append(ligand_info)
         if len(ligands) < 20:
@@ -177,34 +177,48 @@ def read_davis():
 def read_fsmol_assay(split = "train", train_phase=1):
     cache_file = f"/home/fengbin/datas/fsmol/{split}_cache.pkl"
     if os.path.exists(cache_file):
-        return pickle.load(open(cache_file, "rb"))
+        datas = pickle.load(open(cache_file, "rb"))
+        for k, v in datas["ligand_sets"].items():
+            ligands_new = []
+            for item in v:
+                try:
+                    ligands_new.append({
+                        "smiles": item["SMILES"],
+                        "pic50_exp": eval(item["LogRegressionProperty"]),
+                        "domain": "fsmol"
+                    })
+                except:
+                    pass
+            datas["ligand_sets"][k] = ligands_new
+        return datas
 
-    if train_phase == 0 and split == "train":
-        return {"ligand_sets": {}, "assays": []}
-    fsmol_path = f"./fsmol_data/{split}"
-    ligand_sets = {}
-    if split == "test":
-        test_file = open("./fsmol_data/regression_test_adkfift.csv", "r").readlines()
-        split_data = [x.split(",")[0] for x in test_file][1:]
-    else:
-        split_path = json.load(open("./fsmol_data/fsmol-0.1.json", "r"))
-        split_data = split_path[split]
-    for file in tqdm(os.listdir(fsmol_path)):
-        assay_id = file.split(".")[0]
-        if assay_id not in split_data:
-            continue
-        file_path = os.path.join(fsmol_path, file)
-        with gzip.open(file_path, mode="rt") as f:
-            ligands = [json.loads(line) for line in f]  # returns a byte string `b'`
-        ligands = [{"SMILES": x["SMILES"], 
-                "LogRegressionProperty": x["LogRegressionProperty"],
-                "Property": x["Property"]} for x in ligands]
-        ligand_sets[file] = ligands
 
-    ret_dict = {"ligand_sets": ligand_sets, "assays": list(ligand_sets.keys())}
+    # if train_phase == 0 and split == "train":
+    #     return {"ligand_sets": {}, "assays": []}
+    # fsmol_path = f"/home/fengbin/meta_delta/fsmol_data/{split}"
+    # ligand_sets = {}
+    # if split == "test":
+    #     test_file = open("/home/fengbin/meta_delta/fsmol_data/regression_test_adkfift.csv", "r").readlines()
+    #     split_data = [x.split(",")[0] for x in test_file][1:]
+    # else:
+    #     split_path = json.load(open("/home/fengbin/meta_delta/fsmol_data/fsmol-0.1.json", "r"))
+    #     split_data = split_path[split]
+    # for file in tqdm(os.listdir(fsmol_path)):
+    #     assay_id = file.split(".")[0]
+    #     if assay_id not in split_data:
+    #         continue
+    #     file_path = os.path.join(fsmol_path, file)
+    #     with gzip.open(file_path, mode="rt") as f:
+    #         ligands = [json.loads(line) for line in f]  # returns a byte string `b'`
+    #     ligands = [{"smiles": x["SMILES"],
+    #             "pic50_exp": x["LogRegressionProperty"],
+    #             "domain": "fsmol"} for x in ligands]
+    #     ligand_sets[file] = ligands
+    #
+    # ret_dict = {"ligand_sets": ligand_sets, "assays": list(ligand_sets.keys())}
     # if not os.path.exists(cache_file):
     #     pickle.dump(ret_dict, open(cache_file, "wb"))
-    return ret_dict
+    # return ret_dict
 
 
 def read_chembl_cell_assay():
@@ -246,7 +260,8 @@ def read_chembl_cell_assay():
             "chembl_assay_type": assay_type,
             "bao_endpoint": bao_endpoint,
             "bao_format": bao_format,
-            "unit": unit
+            "unit": unit,
+            "domain": "chembl"
         }
         assay_id_dicts[assay_id].append(ligand_info)
     
@@ -376,7 +391,8 @@ def read_pQSAR_assay():
             "affi_prefix": "",
             "smiles": compounds[compound_id],
             "pic50_exp": pic50_exp,
-            "train_flag": train_flag
+            "train_flag": train_flag,
+            "domain": "pqsar"
         }
 
         if assay_id not in ligand_set:
@@ -385,6 +401,24 @@ def read_pQSAR_assay():
 
     return {"ligand_sets": ligand_set,
             "assays": list(ligand_set.keys())}
+
+def read_bdb_cross():
+    BDB_all = read_BDB_per_assay()
+    save_path = '/home/fengbin/datas/BDB/split_name_train_val_test_bdb.pkl'
+    split_name_train_val_test = pickle.load(open(save_path, "rb"))
+    repeat_ids = set(
+        [x.strip() for x in open("/home/fengbin/meta_delta/scripts/cross_repeat/c2b_repeat", "r").readlines()])
+    test_ids = [x for x in split_name_train_val_test['test'] if x not in repeat_ids]
+    return {"assays": test_ids, "ligand_sets": {aid:BDB_all["ligand_sets"][aid] for aid in test_ids}}
+
+def read_chembl_cross():
+    chembl_all = read_chembl_cell_assay()
+    save_path = '/home/fengbin/datas/chembl/chembl_split_new.json'
+    split_name_train_val_test = json.load(open(save_path, "r"))
+    repeat_ids = set(
+        [x.strip() for x in open("/home/fengbin/meta_delta/scripts/cross_repeat/b2c_repeat", "r").readlines()])
+    test_ids = [x for x in split_name_train_val_test['test'] if x not in repeat_ids]
+    return {"assays": test_ids, "ligand_sets": {aid:chembl_all["ligand_sets"][aid] for aid in test_ids}}
 
 
 if __name__ == "__main__":

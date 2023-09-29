@@ -19,9 +19,9 @@ class GDSCRegressor(RegressorBase):
 
         total_losses = []
         per_task_target_preds = []
+        per_task_metrics = []
         self.regressor.zero_grad()
         final_weights = []
-        sup_losses = []
 
         for x_task, y_task, split, assay_idx in zip(xs, ys, splits, assay_idxes):
             y_task = y_task.float().cuda()
@@ -36,16 +36,16 @@ class GDSCRegressor(RegressorBase):
                                                          num_step=num_steps - 1)
 
             per_task_target_preds.append(target_preds.detach().cpu().numpy())
+            per_task_metrics.append(self.get_metric(y_task, target_preds, split))
             total_losses.append(target_loss)
             final_weights.append(None)
-            sup_losses.append(None)
 
             if not is_training_phase:
                 self.regressor.restore_backup_stats()
 
         losses = self.get_across_task_loss_metrics(total_losses=total_losses,
                                                    loss_weights=assay_weight)
-        return losses, per_task_target_preds, final_weights, sup_losses
+        return losses, per_task_target_preds, final_weights, per_task_metrics
 
     def net_forward(self, x, y, split, weights, backup_running_statistics, training, num_step, assay_idx=None,
                     is_support=False):
