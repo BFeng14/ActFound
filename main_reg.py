@@ -143,6 +143,9 @@ def test(args, epoch, model, dataloader, is_test=True):
         if args.knn_maml:
             test_data_all = [x for x in test_data_all]
         for step, cur_data in enumerate(test_data_all):
+            ligands_x = cur_data[0][0]
+            if len(ligands_x) <= args.test_sup_num:
+                continue
             losses, per_task_target_preds, final_weights, per_task_metrics = model.run_validation_iter(cur_data)
             r2_list.append(per_task_metrics[0]["r2"])
             R2os_list.append(per_task_metrics[0]["R2os"])
@@ -237,6 +240,25 @@ def main():
             print("write result to", f"{write_dir}/sup_num_{args.test_sup_num}.json")
             print("\n\n\n\n")
             json.dump(res_dict, open(os.path.join(write_dir, f"sup_num_{args.test_sup_num}.json"), "w"))
+    elif args.train == 2:
+        test_data_all = dataloader.get_test_batches()
+
+        save_dir = "./ligand_feats/ligands_bdb_indomain_test_meta_delta"
+        os.system(f"mkdir -p {save_dir}")
+        for train_idx, cur_data in tqdm(enumerate(test_data_all)):
+            ligand_num = len(cur_data[1][0])
+            x_task = cur_data[0][0]
+            y_task = cur_data[1][0]
+            x_task = x_task.float().cuda()
+            assay_name = cur_data[3][0].replace("/", "_")
+            feat, _ = model.regressor.forward_feat(x=x_task, num_step=0)
+            feat = feat.detach()
+            # pred_y = pred_y.detach().cpu().numpy()
+            # r2 = np.corrcoef(y_task, pred_y)[0, 1]
+            # print(assay_name, r2)
+            np.save(f"{save_dir}/{assay_name}", feat.cpu().numpy())
+            np.save(f"{save_dir}/{assay_name}_y", y_task)
+        exit()
 
 
 if __name__ == '__main__':

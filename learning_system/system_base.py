@@ -227,7 +227,7 @@ class RegressorBase(nn.Module):
         raise NotImplementedError
 
     def net_forward(self, x, y, split, weights, backup_running_statistics, training, num_step, assay_idx=None,
-                    is_support=False):
+                    is_support=False, **kwargs):
         raise NotImplementedError
 
     def trainable_parameters(self):

@@ -115,7 +115,7 @@ class CHEMBLBDBMetaDataset(BaseMetaDataset):
 
         data_cnt = 0
         with Pool(16) as p:
-            res_all = p.map(preprocess_assay, tqdm.tqdm([ligand_set.get(x, None) for x in assay_list]))
+            res_all = p.map(preprocess_assay, tqdm.tqdm([(ligand_set.get(x, None), self.args.test_sup_num) for x in assay_list]))
 
             for res, assay_id in zip(res_all, assay_list):
                 if res is None:

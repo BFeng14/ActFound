@@ -12,7 +12,7 @@ import hashlib
 
 
 def preprocess_assay(in_data):
-    lines = in_data
+    lines, test_sup_num = in_data
     x_tmp = []
     smiles_list = []
     activity_list = []

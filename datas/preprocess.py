@@ -12,6 +12,7 @@ def read_BDB_per_assay():
     assays = []
     ligand_sets = {}
     split_cnt = 0
+    means = []
 
     for target_name in tqdm(list(os.listdir(data_dir))):
         for assay_file in os.listdir(os.path.join(data_dir, target_name)):
@@ -44,15 +45,16 @@ def read_BDB_per_assay():
                     "domain": "bdb"
                 }
                 ligands.append(ligand_info)
-            
             pic50_exp_list = [x["pic50_exp"] for x in ligands]
             pic50_std = np.std(pic50_exp_list)
             if pic50_std <= 0.2:
                 continue
             if len(ligands) < 20:
                 continue
+            means.append(np.mean([x["pic50_exp"] for x in ligands]))
             ligand_sets[assay_name] = ligands
 
+    print(np.mean(means))
     print("split_cnt:", split_cnt)
     return {"ligand_sets": ligand_sets,
             "assays": list(ligand_sets.keys())}
@@ -82,8 +84,8 @@ def read_BDB_merck():
         opls4_res = []
         errors = []
         for ligand_info in v:
-            pic50_exp = -float(ligand_info["exp_dg"])
-            opls4 = -float(ligand_info["pred_dg"])
+            pic50_exp = -float(ligand_info["exp_dg"]) - 9.63 + -2.24
+            opls4 = -float(ligand_info["pred_dg"]) - 9.63 + -2.24
             errors.append(pic50_exp - opls4)
             opls4_res.append(opls4)
             smiles = ligand_info["smiles"]
@@ -115,17 +117,17 @@ def read_kiba():
         for i, affi in enumerate(affis):
             if not np.isnan(affi) and affi < 10000:
                 ligand_id, smiles = ligand_list[i]
-                pic50s.append((affi - 11.72) + 6.75)
+                pic50s.append((affi - 11.72) + -2.24)
                 ligand_info = {
                     "affi_prefix": "",
                     "smiles": smiles,
                     "ligand_id": ligand_id,
-                    "pic50_exp": (affi - 11.72) + 6.75
+                    "pic50_exp": (affi - 11.72) + -2.24
                     }
                 ligands.append(ligand_info)
         if len(ligands) < 20:
             continue
-        stds.append(np.std(pic50s))
+        stds.append(np.mean(pic50s))
         ligand_sets[f"kiba_{assay_idx}"] = ligands
     print("stds", np.mean(stds))
 
@@ -300,7 +302,7 @@ def read_chembl_cell_assay_OOD():
         std_rel = line[5]
         if std_rel != "=":
             continue
-        pic50_exp = -math.log10(float(line[6]))
+        pic50_exp = -math.log10(float(line[6])) - -1.66 + -2.249
         affi_prefix = line[5]
         pic50s.append(pic50_exp)
         ligand_info = {
@@ -422,38 +424,39 @@ def read_chembl_cross():
 
 
 if __name__ == "__main__":
-    datas = read_chembl_cell_assay()["ligand_sets"]
-    assay_infos = {}
-    units = {}
-    for k, v in datas.items():
-        ligand_num = len(v)
-        bao_endpoint = v[0]["bao_endpoint"]
-        bao_format = v[0]["bao_format"]
-        assay_type = v[0]["chembl_assay_type"]
-        std_type = v[0]["assay_type"]
-        unit = v[0]["unit"]
-        if unit not in units:
-            units[unit] = 0
-        units[unit] += 1
-        assay_infos[k] = {
-            "ligand_num": ligand_num,
-            "bao_endpoint": bao_endpoint,
-            "bao_format": bao_format,
-            "assay_type": assay_type,
-            "std_type": std_type,
-            "unit": unit
-        }
-    print(units)
-    json.dump(assay_infos, open("assay_infos.json", "w"))
-    """BAO_0000218: organism-based format
-BAO_0000219: cell-based format
-BAO_0000220: subcellular format
-BAO_0000221: tissue-based format
-BAO_0000223: protein complex format
-BAO_0000224: protein format
-BAO_0000225: nucleic acid format
-BAO_0000249: cell membrane format
-BAO_0000357: single protein format"""
+    read_BDB_merck()
+#     datas = read_chembl_cell_assay()["ligand_sets"]
+#     assay_infos = {}
+#     units = {}
+#     for assay_id, v in datas.items():
+#         ligand_num = len(v)
+#         bao_endpoint = v[0]["bao_endpoint"]
+#         bao_format = v[0]["bao_format"]
+#         assay_type = v[0]["chembl_assay_type"]
+#         std_type = v[0]["assay_type"]
+#         unit = v[0]["unit"]
+#         if unit not in units:
+#             units[unit] = 0
+#         units[unit] += 1
+#         assay_infos[assay_id] = {
+#             "ligand_num": ligand_num,
+#             "bao_endpoint": bao_endpoint,
+#             "bao_format": bao_format,
+#             "assay_type": assay_type,
+#             "std_type": std_type,
+#             "unit": unit
+#         }
+#     print(units)
+#     json.dump(assay_infos, open("assay_infos.json", "w"))
+#     """BAO_0000218: organism-based format
+# BAO_0000219: cell-based format
+# BAO_0000220: subcellular format
+# BAO_0000221: tissue-based format
+# BAO_0000223: protein complex format
+# BAO_0000224: protein format
+# BAO_0000225: nucleic acid format
+# BAO_0000249: cell membrane format
+# BAO_0000357: single protein format"""
 
     # a = read_chembl_cell_assay_OOD()
     # print(len(a["ligand_sets"]))

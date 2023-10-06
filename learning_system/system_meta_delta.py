@@ -127,14 +127,17 @@ class MetaDeltaRegressor(RegressorBase):
         return names_weights_copy, support_loss_each_step, task_losses
 
     def net_forward(self, x, y, split, weights, backup_running_statistics, training, num_step, assay_idx=None,
-                    is_support=False):
+                    is_support=False, **kwargs):
 
         sup_idx = torch.nonzero(split)[:, 0]
         tgt_idx = torch.nonzero(1. - split)[:, 0]
-        sup_x = x[sup_idx]
-        tgt_x = x[tgt_idx]
-        sup_y = y[sup_idx]
-        tgt_y = y[tgt_idx]
+        try:
+            sup_x = x[sup_idx]
+            tgt_x = x[tgt_idx]
+            sup_y = y[sup_idx]
+            tgt_y = y[tgt_idx]
+        except:
+            print()
         sup_num = torch.sum(split)
         tgt_num = split.shape[0] - sup_num
 
@@ -224,7 +227,10 @@ class MetaDeltaRegressor(RegressorBase):
             top16_idx = np.argsort(-topk_weights)[:16]
             top16_weight = topk_weights[top16_idx]
             knn_assay_idx = [knn_assay_idx[idx] for idx in top16_idx]
+            old_sup_num = self.args.test_sup_num
+            self.args.test_sup_num = 16
             data_batch_knn = [x for x in self.dataloader.get_train_batches_weighted(top16_weight * 0.2, knn_assay_idx, len(knn_assay_idx))]
+            self.args.test_sup_num = old_sup_num
         else:
             data_batch_knn = []
         return data_batch_knn, loss, per_task_target_preds, final_weights, per_task_metrics

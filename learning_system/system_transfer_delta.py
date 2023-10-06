@@ -1,3 +1,5 @@
+import random
+
 import torch
 import torch.nn as nn
 from .system_base import RegressorBase
@@ -22,6 +24,7 @@ class TransferDeltaRegressor(RegressorBase):
         per_task_metrics = []
         self.is_training_phase = is_training_phase
 
+        a_idx = 0
         for x_task, y_task, split, assay_idx in zip(xs, ys, splits, assay_idxes):
             y_task = y_task.float().cuda()
             x_task = x_task.float().cuda()
@@ -29,6 +32,18 @@ class TransferDeltaRegressor(RegressorBase):
             names_weights_copy = None
             support_loss_each_step = None
             task_losses = []
+            negs = None
+            if is_training_phase:
+                negs = []
+                for i, x_neg in enumerate(xs):
+                    if i == a_idx:
+                        continue
+                    choose_idx = [1]*10 + [0]*(len(x_neg)-10)
+                    random.shuffle(choose_idx)
+                    choose_idx = torch.tensor([i for i, x in enumerate(choose_idx) if x]).cuda().long()
+                    negs.append(x_neg[choose_idx])
+                negs = torch.concat(negs, dim=0).float().cuda()
+
             if not is_training_phase:
                 names_weights_copy, support_loss_each_step, task_losses = self.inner_loop(x_task, y_task, assay_idx, split,
                                                                                           is_training_phase, epoch,
@@ -49,9 +64,11 @@ class TransferDeltaRegressor(RegressorBase):
                                                              weights=names_weights_copy,
                                                              backup_running_statistics=False, training=True,
                                                              num_step=num_steps - 1,
-                                                             is_support=False)
+                                                             is_support=False,
+                                                             neg_sample=negs)
             task_losses.append(target_loss)
 
+            a_idx += 1
             per_task_target_preds.append(target_preds.detach().cpu().numpy())
             metrics = self.get_metric(y_task, target_preds, split)
             metrics["each_step_loss"] = support_loss_each_step
@@ -68,7 +85,7 @@ class TransferDeltaRegressor(RegressorBase):
         return losses, per_task_target_preds, final_weights, per_task_metrics
 
     def net_forward(self, x, y, split, weights, backup_running_statistics, training, num_step, assay_idx=None,
-                    is_support=False):
+                    is_support=False, **kwargs):
 
         sup_idx = torch.nonzero(split)[:, 0]
         tgt_idx = torch.nonzero(1. - split)[:, 0]
@@ -78,6 +95,8 @@ class TransferDeltaRegressor(RegressorBase):
         tgt_y = y[tgt_idx]
         sup_num = torch.sum(split)
         tgt_num = split.shape[0] - sup_num
+
+        neg_sample = kwargs.get("neg_sample", None)
 
         out_embed, out_value = self.regressor.forward(x=x, params=weights,
                                                       training=training,
@@ -114,7 +133,7 @@ class TransferDeltaRegressor(RegressorBase):
 
             loss = self.robust_square_error(ddg_pred, ddg_real, topk_idx)
             loss_dg = torch.mean((preds - sup_y) ** 2)
-            loss = loss_dg / rescale**2
+            loss = torch.sqrt(loss_dg) / rescale
         else:
             ddg_pred_1 = support_value.unsqueeze(-1) - tgt_value.unsqueeze(0)
             ddg_real_1 = sup_y.unsqueeze(-1) - tgt_y.unsqueeze(0)
@@ -124,12 +143,22 @@ class TransferDeltaRegressor(RegressorBase):
             cross_sim_mat = self.get_sim_matrix(sup_x, tgt_x)
             _, topk_idx = torch.topk(cross_sim_mat, dim=0, k=cross_sim_mat.shape[0] // 2)
 
-            embed_sim_matrix = self.cossim_matrix(support_features_flat, query_features_flat) / self.temp
+            embed_sim_matrix = self.cossim_matrix(support_features_flat, query_features_flat)
+
+            if self.is_training_phase:
+                neg_sample_feat, _ = self.regressor.forward(x=neg_sample, params=weights,
+                                                            training=training,
+                                                            backup_running_statistics=False,
+                                                            num_step=num_step)
+                neg_sample_sim_matrix = self.cossim_matrix(support_features_flat, neg_sample_feat)
+                contrastive_loss = (-embed_sim_matrix.mean(-1) + neg_sample_sim_matrix.mean(-1) + 0.3)
+                contrastive_loss = contrastive_loss.clamp(min=0).mean()
+
             sup_y_repeat = sup_y.unsqueeze(-1).repeat(1, tgt_num)  # [sup_num, tgt_num]
             preds_all = sup_y_repeat - ddg_pred_1 * rescale
 
             preds_select = torch.gather(preds_all, 0, topk_idx)
-            embed_sim_matrix_select = torch.gather(embed_sim_matrix, 0, topk_idx)
+            embed_sim_matrix_select = torch.gather(embed_sim_matrix/self.temp, 0, topk_idx)
             embed_sim_matrix_select = self.softmax(embed_sim_matrix_select)
             preds = torch.sum(preds_select * embed_sim_matrix_select, dim=0)
 
@@ -139,7 +168,8 @@ class TransferDeltaRegressor(RegressorBase):
             loss_2 = self.robust_square_error(ddg_pred_2, ddg_real_2, tgt_topk_idx)
             loss_1 = self.robust_square_error(ddg_pred_1, ddg_real_1, topk_idx)
             loss_dg = torch.mean((preds - tgt_y) ** 2)
-            loss = loss_2 * 0.25 + loss_1 * 0.5 + loss_dg
+            loss = torch.sqrt(loss_2 * 0.25 + loss_1 * 0.5 + loss_dg)
+            if self.is_training_phase:
+                loss = loss + contrastive_loss*0.5
 
-        loss = torch.sqrt(loss)
         return loss, preds

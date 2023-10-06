@@ -27,10 +27,10 @@ except:
 
 datasets = [f"ChEMBL->{domain_name}", f"BDB->{domain_name}"]
 models = ['meta_delta_fusion', 'transfer_delta', 'maml', 'DKT', 'protonet', 'CNP', 'transfer_qsar']
-models_cvt = {'meta_delta_fusion': 'Meta-Delta',
+models_cvt = {'meta_delta_fusion': 'MetaLigand',
               'maml': 'MAML',
-              'transfer_delta': 'Transfer-Delta',
-              'transfer_qsar': 'Transfer-QSAR',
+              'transfer_delta': 'TransferLigand',
+              'transfer_qsar': 'TransferQSAR',
               'protonet': 'ProtoNet'}
 
 if metric_name == "rmse":

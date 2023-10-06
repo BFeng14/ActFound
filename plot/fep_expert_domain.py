@@ -26,10 +26,10 @@ if domain_name == 'opls4':
     root_path = f"/home/fengbin/meta_delta_master/result_fep/fep_opls4/{dataset_name}"
 models = ['meta_delta_fusion', 'maml',
           'protonet', 'transfer_delta', 'transfer_qsar']
-models_cvt = {'meta_delta_fusion': 'Meta-Delta',
+models_cvt = {'meta_delta_fusion': 'MetaLigand',
               'maml': 'MAML',
-              'transfer_delta': 'Transfer-Delta',
-              'transfer_qsar': 'Transfer-QSAR',
+              'transfer_delta': 'TransferLigand',
+              'transfer_qsar': 'TransferQSAR',
               'protonet': 'ProtoNet'}
 
 
@@ -91,7 +91,7 @@ if metric_name == "r2":
         plt.title(f"{dataset_name.upper()} OPLS4 as support test", size=20)
     plt.xticks(ticks=x)
     plt.ylabel(metric_name, size=16)
-    plt.axhline(y=0.575, color='k', linestyle='solid')
+    plt.axhline(y=0.575, color='assay_id', linestyle='solid')
     labels.append('OPLS4')
     plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.15),
                fancybox=True, shadow=False, ncol=6, labels=labels)
@@ -108,7 +108,7 @@ if metric_name == "rmse":
         plt.title(f"{dataset_name.upper()} OPLS4 as support test", size=20)
     plt.xticks(ticks=x)
     plt.ylabel('RMSE', size=16)
-    plt.axhline(y=0.602, color='k', linestyle='solid')
+    plt.axhline(y=0.602, color='assay_id', linestyle='solid')
     labels.append('OPLS4')
     plt.legend(loc='lower center', bbox_to_anchor=(0.5, -0.15),
                fancybox=True, shadow=False, ncol=6, labels=labels)

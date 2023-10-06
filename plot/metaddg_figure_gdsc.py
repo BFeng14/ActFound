@@ -18,10 +18,9 @@ import warnings
 warnings.filterwarnings('ignore')
 
 models = ['BDB-pretrain', 'ChEMBL-pretrain', 'no-pretrain']
-models_cvt = {'Meta-DDG': 'Meta-Delta',
-              'maml': 'MAML',
-              'transfer_delta': 'Transfer-Delta',
-              'transfer_qsar': 'Transfer-QSAR'}
+models_cvt = {'BDB-pretrain': 'onBDB',
+              'ChEMBL-pretrain': 'onChEMBL',
+              'no-pretrain': 'random-init',}
 
 import os
 import json
@@ -68,16 +67,17 @@ for i in range(3):
 
 
 import matplotlib.pyplot as plt
-plt.figure(figsize=(int(plot_settings.FIG_WIDTH * (3/2)), plot_settings.FIG_HEIGHT))
+plt.figure(figsize=(int(plot_settings.FIG_WIDTH * 1.5), plot_settings.FIG_HEIGHT))
 ylabel_all = ["r2", "RMSE", "R2os"]
 for i in range(3):
-    ax_i = plt.subplot(1, 3, i+1)
-    min_val = np.min(np.array(means_all[0]) - np.array(stderrs_all[0]))
-    min_val = max(min_val-0.1, 0.)
+    ax_i = plt.subplot(1, 3, i + 1)
+    min_val = np.min(np.array(means_all[i]) - np.array(stderrs_all[i]))
+    min_val = max(min_val - 0.02, 0.)
     plot_utils.bar_plot(
-        ax_i, data=means_all[0], errs=stderrs_all[0], data_labels=labels,
-        xlabel="", ylabel=ylabel_all[i], rotangle=0,
+        ax_i, data=means_all[i], errs=stderrs_all[i], data_labels=labels,
+        xlabel="", ylabel=ylabel_all[i], rotangle=45, color=colors,
         min_val=min_val)
+
 
 
 plot_utils.format_legend(ax, *ax.get_legend_handles_labels(), loc='upper right', ncols=2)
@@ -85,5 +85,6 @@ plot_utils.put_legend_outside_plot(ax, anchorage=(1.01, 1.01))
 plt.tight_layout()
 
 plt.show()
-plt.savefig(f'./figs/figure_gdsc.pdf')
+plt.savefig(f'./figs/4.f.figure_gdsc.pdf')
+plt.show()
 

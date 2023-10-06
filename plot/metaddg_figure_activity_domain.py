@@ -22,10 +22,10 @@ warnings.filterwarnings('ignore')
 
 
 datasets = ["ChEMBL-Activity domain"]
-models_cvt = {'meta_delta_fusion': 'Meta-Delta',
+models_cvt = {'meta_delta_fusion': 'MetaLigand',
               'maml': 'MAML',
-              'transfer_delta': 'Transfer-Delta',
-              'transfer_qsar': 'Transfer-QSAR',
+              'transfer_delta': 'TransferLigand',
+              'transfer_qsar': 'TransferQSAR',
               'protonet': 'ProtoNet'}
 
 metric_name = sys.argv[1]

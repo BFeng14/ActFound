@@ -48,12 +48,12 @@ class FSSMOLMetaDataset(BaseMetaDataset):
         assay_list = []
         assay_list += self.split_name_train_val_test['test']
         assay_list += self.split_name_train_val_test['val']
-        if self.args.train == 1 or self.args.train == 4:
+        if self.args.train == 1 or self.args.knn_maml:
             assay_list += self.split_name_train_val_test['train']
 
         data_cnt = 0
         with Pool(16) as p:
-            res_all = p.map(preprocess_assay, tqdm.tqdm([ligand_set[x] for x in assay_list]))
+            res_all = p.map(preprocess_assay, tqdm.tqdm([(ligand_set[x], self.args.test_sup_num) for x in assay_list]))
 
             for res, assay_id in zip(res_all, assay_list):
                 if res is None:

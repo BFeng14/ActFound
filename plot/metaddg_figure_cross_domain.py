@@ -20,10 +20,10 @@ warnings.filterwarnings('ignore')
 
 datasets = ["ChEMBL->BDB", "BDB->ChEMBL"]
 models = ['meta_delta_fusion', 'transfer_delta', 'maml', 'DKT', 'protonet', 'CNP', 'transfer_qsar']
-models_cvt = {'meta_delta_fusion': 'Meta-Delta',
+models_cvt = {'meta_delta_fusion': 'MetaLigand',
               'maml': 'MAML',
-              'transfer_delta': 'Transfer-Delta',
-              'transfer_qsar': 'Transfer-QSAR',
+              'transfer_delta': 'TransferLigand',
+              'transfer_qsar': 'TransferQSAR',
               'protonet': 'ProtoNet'}
 metric_name = sys.argv[1]
 if metric_name == "rmse":

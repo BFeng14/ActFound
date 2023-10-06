@@ -5,6 +5,7 @@ from collections import defaultdict
 import pandas as pd
 
 import matplotlib
+
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mtick
@@ -24,12 +25,12 @@ def format_ax(ax):
 def format_legend(fig_legend, handles, labels, legendmarker=20, loc='center', ncols=1):
     fig_legend.legend(handles, labels, loc=loc, scatterpoints=1, ncol=ncols,
                       frameon=False, markerscale=legendmarker)
-    
-    
+
+
 def put_legend_outside_plot(ax, anchorage=(1.1, 1.05)):
     ax.legend(bbox_to_anchor=anchorage)
-        
-        
+
+
 def align_axes_ticks(ax, use_y=True, ticks_to_use=None):
     if use_y:
         yticks = ax.get_yticks()
@@ -86,7 +87,7 @@ def line_plot(ax, ydata, xlabel, ylabel, xdata=None, xscale='linear', yscale='li
     if invert_axes:
         ax.invert_xaxis()
         ax.invert_yaxis()
-    
+
 
 def horizontal_line(ax, yval, linestyle='solid', linewidth=1, color='tab:blue'):
     ax.axhline(y=yval, linestyle=linestyle, linewidth=linewidth, c=color)
@@ -100,7 +101,8 @@ def bar_plot(ax, data, data_labels, xlabel, ylabel, xscale='linear', yscale='lin
                yerr=errs, edgecolor=color if edge_color is None else edge_color, ecolor='k')
         ax.invert_yaxis()
     else:
-        ax.bar(x=range(len(data)), height=[d-min_val for d in data], bottom=min_val, color=color, yerr=errs, ecolor='k')
+        ax.bar(x=range(len(data)), height=[d - min_val for d in data], bottom=min_val, color=color, yerr=errs,
+               ecolor='k')
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_xscale(xscale)
@@ -128,8 +130,9 @@ def horizontal_bar_plot(ax, data, data_labels, xlabel, ylabel, xscale='linear', 
 def grouped_barplot(ax, nested_data, data_labels, xlabel, ylabel, xscale='linear', yscale='linear',
                     min_val=0, invert_axes=False, nested_color='tab:blue', color_legend=None, nested_errs=None,
                     tickloc_top=True, rotangle=45, legend_loc='upper right', anchorpoint='right', scale=1.5):
-    xs = [scale * (i + j * 0.9 / len(nested_data[0]) - 0.5) for i in range(len(nested_data)) for j in range(len(nested_data[0]))]
-    #print(xs)
+    xs = [scale * (i + j * 0.9 / len(nested_data[0]) - 0.5) for i in range(len(nested_data)) for j in
+          range(len(nested_data[0]))]
+    # print(xs)
     heights = []
     bottoms = []
     colors = []
@@ -149,7 +152,7 @@ def grouped_barplot(ax, nested_data, data_labels, xlabel, ylabel, xscale='linear
                height=[heights[i] for i in range(it, len(heights), len(nested_data[0]))],
                bottom=[bottoms[i] for i in range(it, len(heights), len(nested_data[0]))],
                color=[colors[i] for i in range(it, len(colors), len(nested_data[0]))],
-               width=scale * 0.9/len(nested_data[0]), label=labels[it] if color_legend is not None else '',
+               width=scale * 0.9 / len(nested_data[0]), label=labels[it] if color_legend is not None else '',
                align='edge', ecolor='k',
                yerr=None if nested_errs is None else [errs[i] for i in range(it, len(errs), len(nested_data[0]))])
     if invert_axes:
@@ -168,8 +171,8 @@ def grouped_barplot(ax, nested_data, data_labels, xlabel, ylabel, xscale='linear
     if color_legend is not None:
         handles, labels = ax.get_legend_handles_labels()
         format_legend(plt, handles, labels, loc=legend_loc)
-        
-        
+
+
 def show_image(ax, data, xlabel, ylabel, aspect=None, cmap='bwr', xticks=[], yticks=[]):
     c = ax.imshow(data, aspect=aspect, cmap=cmap)
     ax.set_xlabel(xlabel)
@@ -177,18 +180,18 @@ def show_image(ax, data, xlabel, ylabel, aspect=None, cmap='bwr', xticks=[], yti
     ax.set_xticks(xticks)
     ax.set_yticks(yticks)
     return c
-        
+
 
 def histogram(ax, data, xlabel, ylabel, color=None, rotangle=None, check_upper=True, N_bins=10,
               xscale='linear', yscale='linear', edge_color=None, label=None):
-    N, bins, patches = plt.hist(data, bins=N_bins, color=color, rwidth=1, 
+    N, bins, patches = plt.hist(data, bins=N_bins, color=color, rwidth=1,
                                 edgecolor=color if edge_color is None else edge_color, label=None)
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     ax.set_xscale(xscale)
     ax.set_yscale(yscale)
-        
-        
+
+
 def sorted_histogram(ax, data, sorted_data, xlabel, ylabel, yscale='linear', call_out_labels=None,
                      base_color=None, call_out_color=None, rotangle=None, check_upper=True, add_padding=0,
                      extra_name_translation=None, edge_color=None, edge_width=1, override_equals=False, anchor='right'):
@@ -199,7 +202,7 @@ def sorted_histogram(ax, data, sorted_data, xlabel, ylabel, yscale='linear', cal
     ax.set_ylabel(ylabel)
     ax.set_yscale(yscale)
     if call_out_labels is None:
-        ax.set_xticks([i+0.5 for i in range(len(sorted_data))])
+        ax.set_xticks([i + 0.5 for i in range(len(sorted_data))])
         ax.set_xticklabels(sorted_data, rotation=rotangle)
     else:
         ax.set_xticks([])
@@ -208,18 +211,18 @@ def sorted_histogram(ax, data, sorted_data, xlabel, ylabel, yscale='linear', cal
             xcheck = x.upper() if check_upper else x
             ibase = sorted_data.index(xcheck)
             lenx = len([m for m in data if m == xcheck])
-            for i in range(ibase-add_padding, ibase+1+add_padding):
+            for i in range(ibase - add_padding, ibase + 1 + add_padding):
                 # make sure it's the same first!
                 icheck = sorted_data[i].upper() if check_upper else sorted_data[i]
                 len_i = len([n for n in data if n == icheck])
                 if not override_equals and len_i != lenx:
                     continue
                 patches[i].set_facecolor(call_out_color)
-        ax.set_xticks([sorted_data.index(x.upper() if check_upper else x)+0.5 for x in call_out_labels])
+        ax.set_xticks([sorted_data.index(x.upper() if check_upper else x) + 0.5 for x in call_out_labels])
         ax.set_xticklabels([extra_name_translation[x] if extra_name_translation is not None else x
                             for x in call_out_labels], rotation=rotangle, ha=anchor)
 
-            
+
 def box_plot(ax, data, xlabel, ylabel, xticks=None, yticks=None, xticklabels=None, yticklabels=None,
              xscale='linear', yscale='linear', box_colors=None, alpha=1, widths=1.0, zorder=0, positions=None):
     bplot = ax.boxplot(
@@ -236,31 +239,31 @@ def box_plot(ax, data, xlabel, ylabel, xticks=None, yticks=None, xticklabels=Non
     for idx, patch in enumerate(bplot['boxes']):
         patch.set_facecolor(box_colors[idx])
         patch.set_alpha(alpha)
-        
-            
+
+
 def violin_plot(ax, data, xlabel, ylabel, xticks=None, yticks=None, xscale='linear', yscale='linear',
                 violin_color=None, violin_line_color=None, alpha=1.0):
     violins = ax.violinplot(data)
     for pc in violins['bodies']:
         pc.set_color(violin_color)
         pc.set_alpha(alpha)
-    for partname in ['cbars','cmins','cmaxes']:
+    for partname in ['cbars', 'cmins', 'cmaxes']:
         vp = violins[partname]
         vp.set_edgecolor(violin_line_color)
         vp.set_linewidth(1)
-        
+
     ax.set_xscale(xscale)
     ax.set_yscale(yscale)
-    
+
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
     if xticks is not None:
-        ax.set_xticks(range(1, len(xticks)+1))
+        ax.set_xticks(range(1, len(xticks) + 1))
         ax.set_xticklabels(xticks)
     if yticks is not None:
-        ax.set_yticks(range(1, len(yticks)+1))
+        ax.set_yticks(range(1, len(yticks) + 1))
         ax.set_yticklabels(yticks)
-        
+
 
 def kaplan_meier_curve(ax, times, observations, labels, xlabel, ylabel, showCI=True,
                        max_time=None, usePercentageX=False, usePercentageY=True, colors=None):

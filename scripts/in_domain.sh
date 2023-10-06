@@ -28,12 +28,42 @@ PQSAR_RES="./result_indomain/pqsar"
 #CUDA_VISIBLE_DEVICES=6 python main_reg.py --datasource=pqsar --logdir ${PQSAR_DIR}/checkpoint_pqsar_protonet --model_name protonet --test_write_file ${PQSAR_RES} ${FIXED_PARAM_PQSAR} &
 #CUDA_VISIBLE_DEVICES=3 python main_reg.py --datasource=pqsar --logdir ${PQSAR_DIR}/checkpoint_pqsar_qsar_transfer --model_name transfer_qsar --test_write_file ${PQSAR_RES} ${FIXED_PARAM_PQSAR} &
 
-FIXED_PARAM_FSMOL="--test_sup_num [16,32,64,128] --test_repeat_num 10 --train 0 --test_epoch -1"
+FIXED_PARAM_FSMOL="--test_sup_num 16 --test_repeat_num 10 --train 0 --test_epoch -1"
 FSMOL_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/fsmol/feat.npy --train_assay_idxes ./train_assay_feat/fsmol/index.pkl"
 FSMOL_DIR="../meta_delta/checkpoints_fsmol"
 FSMOL_RES="./result_indomain/fsmol"
-CUDA_VISIBLE_DEVICES=7 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_ddg_meta --model_name meta_delta --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} ${FSMOL_KNN_MAML} &
-CUDA_VISIBLE_DEVICES=6 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_ddg_transfer --model_name transfer_delta --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
-CUDA_VISIBLE_DEVICES=5 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_qsar_meta --model_name maml --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
-CUDA_VISIBLE_DEVICES=4 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_protonet --model_name protonet --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
-CUDA_VISIBLE_DEVICES=3 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_qsar_transfer --model_name transfer_qsar --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
+#CUDA_VISIBLE_DEVICES=7 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_ddg_meta --model_name meta_delta --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} ${FSMOL_KNN_MAML} &
+#CUDA_VISIBLE_DEVICES=6 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_ddg_transfer --model_name transfer_delta --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
+#CUDA_VISIBLE_DEVICES=5 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_qsar_meta --model_name maml --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
+#CUDA_VISIBLE_DEVICES=4 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_protonet --model_name protonet --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
+#CUDA_VISIBLE_DEVICES=3 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_qsar_transfer --model_name transfer_qsar --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
+
+FIXED_PARAM_FSMOL="--test_sup_num 32 --test_repeat_num 10 --train 0 --test_epoch -1"
+FSMOL_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/fsmol/feat.npy --train_assay_idxes ./train_assay_feat/fsmol/index.pkl"
+FSMOL_DIR="../meta_delta/checkpoints_fsmol"
+FSMOL_RES="./result_indomain/fsmol"
+#CUDA_VISIBLE_DEVICES=6 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_ddg_meta --model_name meta_delta --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} ${FSMOL_KNN_MAML} &
+#CUDA_VISIBLE_DEVICES=6 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_ddg_transfer --model_name transfer_delta --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
+#CUDA_VISIBLE_DEVICES=5 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_qsar_meta --model_name maml --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
+#CUDA_VISIBLE_DEVICES=4 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_protonet --model_name protonet --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
+#CUDA_VISIBLE_DEVICES=3 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_qsar_transfer --model_name transfer_qsar --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
+
+FIXED_PARAM_FSMOL="--test_sup_num 64 --test_repeat_num 10 --train 0 --test_epoch -1"
+FSMOL_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/fsmol/feat.npy --train_assay_idxes ./train_assay_feat/fsmol/index.pkl"
+FSMOL_DIR="../meta_delta/checkpoints_fsmol"
+FSMOL_RES="./result_indomain/fsmol"
+CUDA_VISIBLE_DEVICES=5 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_ddg_meta --model_name meta_delta --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} ${FSMOL_KNN_MAML} &
+#CUDA_VISIBLE_DEVICES=6 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_ddg_transfer --model_name transfer_delta --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
+#CUDA_VISIBLE_DEVICES=5 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_qsar_meta --model_name maml --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
+#CUDA_VISIBLE_DEVICES=4 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_protonet --model_name protonet --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
+#CUDA_VISIBLE_DEVICES=3 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_qsar_transfer --model_name transfer_qsar --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
+
+FIXED_PARAM_FSMOL="--test_sup_num 128 --test_repeat_num 10 --train 0 --test_epoch -1"
+FSMOL_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/fsmol/feat.npy --train_assay_idxes ./train_assay_feat/fsmol/index.pkl"
+FSMOL_DIR="../meta_delta/checkpoints_fsmol"
+FSMOL_RES="./result_indomain/fsmol"
+CUDA_VISIBLE_DEVICES=4 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_ddg_meta --model_name meta_delta --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} ${FSMOL_KNN_MAML} &
+#CUDA_VISIBLE_DEVICES=6 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_ddg_transfer --model_name transfer_delta --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
+#CUDA_VISIBLE_DEVICES=5 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_qsar_meta --model_name maml --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
+#CUDA_VISIBLE_DEVICES=4 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_protonet --model_name protonet --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
+#CUDA_VISIBLE_DEVICES=3 python main_reg.py --datasource=fsmol --logdir ${FSMOL_DIR}/checkpoint_fsmol_qsar_transfer --model_name transfer_qsar --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} &
