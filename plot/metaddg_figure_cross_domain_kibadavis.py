@@ -26,7 +26,7 @@ except:
     shot = 16
 
 datasets = [f"ChEMBL->{domain_name}", f"BDB->{domain_name}"]
-models = ['meta_delta_fusion', 'transfer_delta', 'maml', 'DKT', 'protonet', 'CNP', 'transfer_qsar']
+models = ['meta_delta_fusion', 'transfer_delta', 'maml', 'protonet', 'DKT', 'CNP', 'transfer_qsar']
 models_cvt = {'meta_delta_fusion': 'MetaLigand',
               'maml': 'MAML',
               'transfer_delta': 'TransferLigand',
@@ -34,7 +34,7 @@ models_cvt = {'meta_delta_fusion': 'MetaLigand',
               'protonet': 'ProtoNet'}
 
 if metric_name == "rmse":
-    models = ['meta_delta_fusion', 'transfer_delta', 'maml', 'DKT', 'protonet']
+    models = ['meta_delta_fusion', 'transfer_delta', 'maml', 'protonet', 'DKT']
 
 import os
 import json
@@ -68,7 +68,7 @@ for x in models:
 #     print(len(chembl[x]))
 
 
-ax = plot_settings.get_wider_axis(double=False)
+ax = plot_settings.get_square_axis()
 colors = [plot_settings.get_model_colors(mod) for mod in models]
 labels = [models_cvt.get(x, x) for x in models]
 mean = {}
@@ -100,7 +100,7 @@ ax = plot_settings.get_wider_axis(double=False)
 plot_utils.grouped_barplot(
         ax, means, 
         datasets,
-        xlabel='', ylabel=ylabel, color_legend=labels,
+        xlabel='', ylabel=ylabel, color_legend=None,
         nested_color=colors, nested_errs=stderrs, tickloc_top=False, rotangle=0, anchorpoint='center',
         legend_loc='upper left',
         min_val=min_val, scale=2)

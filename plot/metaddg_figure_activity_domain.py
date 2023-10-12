@@ -30,9 +30,9 @@ models_cvt = {'meta_delta_fusion': 'MetaLigand',
 
 metric_name = sys.argv[1]
 shot_name = sys.argv[2]
-models = ['meta_delta_fusion', 'transfer_delta', 'maml', 'DKT', 'protonet', 'CNP', 'transfer_qsar', 'RF', 'GPST', 'KNN']
+models = ['meta_delta_fusion', 'transfer_delta', 'maml', 'protonet', 'DKT', 'CNP', 'transfer_qsar', 'RF', 'GPST', 'KNN']
 if metric_name == "rmse":
-    models = ['meta_delta_fusion', 'transfer_delta', 'maml', 'DKT', 'protonet', 'RF', 'GPST', 'KNN']
+    models = ['meta_delta_fusion', 'transfer_delta', 'maml', 'protonet', 'DKT', 'CNP', 'RF', 'GPST', 'KNN']
 
 
 import os
@@ -75,11 +75,13 @@ min_val = max(min_val-(max_val-min_val)*0.15, 0.)
 ylabel = metric_name
 if metric_name == "rmse":
     ylabel = "RMSE"
-ax = plot_settings.get_wider_axis(double=False)
+# ax = plot_settings.get_square_axis()
+plt.figure(figsize=(int(plot_settings.FIG_WIDTH * 0.75), plot_settings.FIG_HEIGHT))
+ax = plt.subplot(1, 1, 1)
 plot_utils.grouped_barplot(
         ax, means, 
         datasets,
-        xlabel='', ylabel=ylabel, color_legend=labels,
+        xlabel='', ylabel=ylabel, color_legend=None,
         nested_color=colors, nested_errs=stderrs, tickloc_top=False, rotangle=0, anchorpoint='center',
         legend_loc='upper left',
         min_val=min_val, scale=2)

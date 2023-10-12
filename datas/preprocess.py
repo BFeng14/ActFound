@@ -335,6 +335,38 @@ def read_chembl_cell_assay_OOD():
     return {"ligand_sets": assay_id_dicts_new, "assays": assay_ids[-500:], "test_assay": assay_ids[-500:]}
 
 
+def load_LIT_PCBA():
+    HTS_path = "/home/fengbin/datas/HTS"
+    assay_id_dicts = {}
+    for target_name in os.listdir(HTS_path):
+        active_t_path = os.path.join(HTS_path, target_name, "active_T.smi")
+        if not os.path.exists(active_t_path):
+            continue
+        active_v_path = os.path.join(HTS_path, target_name, "active_V.smi")
+        active = list(open(active_t_path, "r").readlines()) + list(open(active_v_path, "r").readlines())
+        negative_t_path = os.path.join(HTS_path, target_name, "inactive_T.smi")
+        negative_v_path = os.path.join(HTS_path, target_name, "inactive_V.smi")
+        negative = list(open(negative_t_path, "r").readlines()) + list(open(negative_v_path, "r").readlines())
+
+        active = [x.split(" ")[0] for x in active]
+        negative = [x.split(" ")[0] for x in negative][:len(active)*10]
+        ligands = []
+        for x in active:
+            ligand_info = {
+                "smiles": x,
+                "pic50_exp": 3 ,
+            }
+            ligands.append(ligand_info)
+        for x in negative:
+            ligand_info = {
+                "smiles": x,
+                "pic50_exp": 0 ,
+            }
+            ligands.append(ligand_info)
+        assay_id_dicts[target_name] = ligands
+    return {"ligand_sets": assay_id_dicts, "assays": list(assay_id_dicts.keys())}
+
+
 def read_pQSAR_assay():
     filename = "/home/fengbin/datas/pQSAR/ci9b00375_si_002.txt"
     compound_filename = "/home/fengbin/datas/pQSAR/ci9b00375_si_003.txt"

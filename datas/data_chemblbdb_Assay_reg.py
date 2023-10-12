@@ -91,6 +91,8 @@ class CHEMBLBDBMetaDataset(BaseMetaDataset):
                 experiment_test = preprocess.read_davis()
             elif self.args.expert_test == "ood":
                 experiment_test = preprocess.read_chembl_cell_assay_OOD()
+            elif  self.args.expert_test == "pcba":
+                experiment_test = preprocess.load_LIT_PCBA()
             elif self.args.expert_test == "fsmol":
                 experiment_test = preprocess.read_fsmol_assay(split = "test")
             else:

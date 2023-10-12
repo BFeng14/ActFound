@@ -77,6 +77,7 @@ for i in range(3):
         ax_i, data=means_all[i], errs=stderrs_all[i], data_labels=labels,
         xlabel="", ylabel=ylabel_all[i], rotangle=45, color=colors,
         min_val=min_val)
+    plot_utils.format_ax(ax_i)
 
 
 

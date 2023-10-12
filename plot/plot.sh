@@ -1,16 +1,16 @@
 # all data necessary for plot is in "result_plot" dir, please replace all "/home/fengbin/meta_delta" in the code into "./result_plot"
 
 ## fig2: in-domain
-#python metaddg_figure_indomain.py r2 & # 2.a chembl，bindingdb in-domain, correlation, 16-shot
-#python metaddg_figure_indomain.py rmse & # 2.b chembl，bindingdb in-domain, RMSE, 16-shot
+python metaddg_figure_indomain.py r2 & # 2.a chembl，bindingdb in-domain, correlation, 16-shot
+python metaddg_figure_indomain.py rmse & # 2.b chembl，bindingdb in-domain, RMSE, 16-shot
 #
-#python metaddg_figure_indomain_fsmol.py r2 # 2.c FSMOL in-domain, correlation, 16,32,64,128-shot
-#python metaddg_figure_indomain_fsmol.py rmse # supplement FSMOL in-domain, RMSE, 16,32,64,128-shot
+python metaddg_figure_indomain_fsmol.py r2 # 2.c FSMOL in-domain, correlation, 16,32,64,128-shot
+python metaddg_figure_indomain_fsmol.py rmse # supplement FSMOL in-domain, RMSE, 16,32,64,128-shot
 #python metaddg_figure_indomain_fsmol.py R2os # supplement FSMOL in-domain, R2os, 16,32,64,128-shot
 #
 #python metaddg_figure_indomain_pqsar.py r2 # 2.c FSMOL in-domain, correlation, 16,32,64,128-shot
 #python metaddg_figure_indomain_pqsar.py rmse # supplement FSMOL in-domain, RMSE, 16,32,64,128-shot
-#
+##
 #python metaddg_figure_activity_domain.py r2 16 # 2.e pretrain on chembl. Test on ChEMBL-Activity, Correlation, 16-shot
 #python metaddg_figure_activity_domain.py rmse 16 # 2.f pretrain on chembl. Test on ChEMBL-Activity, RMSE, 16-shot
 #
@@ -33,11 +33,11 @@
 # fig4: expert-domain
 # Attention: all figure in expert-domain was previously ploted by EXCEL, need to write new python script
 
-python metaddg_figure_fep_domain.py r2 fep chembl &
-python metaddg_figure_fep_domain.py rmse fep chembl &
-python metaddg_figure_fep_domain.py r2 fep_opls4 chembl &
-python metaddg_figure_fep_domain.py rmse fep_opls4 chembl &
-python metaddg_figure_fep_domain.py r2 fep bdb &
-python metaddg_figure_fep_domain.py rmse fep bdb &
-python metaddg_figure_fep_domain.py r2 fep_opls4 bdb &
-python metaddg_figure_fep_domain.py rmse fep_opls4 bdb &
+#python metaddg_figure_fep_domain.py r2 fep chembl &
+#python metaddg_figure_fep_domain.py rmse fep chembl &
+#python metaddg_figure_fep_domain.py r2 fep_opls4 chembl &
+#python metaddg_figure_fep_domain.py rmse fep_opls4 chembl &
+#python metaddg_figure_fep_domain.py r2 fep bdb &
+#python metaddg_figure_fep_domain.py rmse fep bdb &
+#python metaddg_figure_fep_domain.py r2 fep_opls4 bdb &
+#python metaddg_figure_fep_domain.py rmse fep_opls4 bdb &

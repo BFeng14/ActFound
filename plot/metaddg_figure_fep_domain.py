@@ -18,7 +18,7 @@ sys.path.append(os.path.join(sys.path[0], '../'))
 warnings.filterwarnings('ignore')
 
 datasets = ["0.2-shot", "0.4-shot", "0.6-shot", "0.8-shot"]
-models = ['meta_delta_fusion', 'transfer_delta', 'maml', 'protonet', 'transfer_qsar']
+models = ['meta_delta_fusion', 'transfer_delta', 'maml', 'DKT', 'transfer_qsar']
 models_cvt = {'meta_delta_fusion': 'MetaLigand',
               'maml': 'MAML',
               'transfer_delta': 'TransferLigand',
@@ -89,12 +89,12 @@ min_val = max(min_val-(max_val-min_val)*0.15, 0.)
 
 ylabel = metric_name
 if metric_name == "rmse":
-    ylabel = "RMSE"
+    ylabel = "RMSE(kcal/mol)"
 ax = plot_settings.get_wider_axis(double=True)
 plot_utils.grouped_barplot(
     ax, means_all,
     datasets,
-    xlabel='', ylabel=ylabel, color_legend=labels,
+    xlabel='', ylabel=ylabel, color_legend=None,
     nested_color=colors, nested_errs=stderrs_all, tickloc_top=False, rotangle=0, anchorpoint='center',
     legend_loc='upper left',
     min_val=min_val, scale=2)

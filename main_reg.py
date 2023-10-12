@@ -68,6 +68,7 @@ def get_args():
     parser.add_argument('--cross_test', default=False, action='store_true')
     parser.add_argument('--use_byhand_lr', default=False, action='store_true')
 
+    parser.add_argument('--inverse_ylabel', default=False, action='store_true')
     parser.add_argument('--knn_maml', default=False, action='store_true')
     parser.add_argument('--train_assay_feat_all', default='')
     parser.add_argument('--train_assay_idxes', default='')

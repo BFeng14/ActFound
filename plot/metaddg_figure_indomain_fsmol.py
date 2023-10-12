@@ -18,7 +18,7 @@ sys.path.append(os.path.join(sys.path[0], '../'))
 warnings.filterwarnings('ignore')
 
 datasets = ["16-shot", "32-shot", "64-shot", "128-shot"]
-models = ['meta_delta_fusion', 'transfer_delta', 'ADKT-IFT', 'maml', 'DKT', 'protonet', 'CNP', 'transfer_qsar', 'RF', 'GPST', 'KNN']
+models = ['meta_delta_fusion', 'transfer_delta', 'ADKT-IFT', 'maml', 'protonet', 'DKT', 'CNP', 'transfer_qsar', 'RF', 'GPST', 'KNN']
 models_cvt = {'meta_delta_fusion': 'MetaLigand',
               'maml': 'MAML',
               'transfer_delta': 'TransferLigand',
@@ -28,9 +28,9 @@ models_cvt = {'meta_delta_fusion': 'MetaLigand',
 # In[3]:
 metric_name = sys.argv[1]
 if metric_name == "rmse":
-    models = ['meta_delta_fusion', 'transfer_delta', 'ADKT-IFT', 'maml', 'DKT', 'protonet', 'RF', 'GPST', 'KNN']
+    models = ['meta_delta_fusion', 'transfer_delta', 'ADKT-IFT', 'maml', 'protonet', 'DKT', 'RF', 'GPST', 'KNN']
 elif metric_name == "R2os":
-    models = ['meta_delta_fusion', 'transfer_delta', 'ADKT-IFT', 'DKT', 'protonet', 'RF', 'GPST']
+    models = ['meta_delta_fusion', 'transfer_delta', 'ADKT-IFT', 'protonet', 'DKT', 'RF', 'GPST']
 
 fsmol = [{}, {}, {}, {}]
 for x in models:
@@ -94,11 +94,13 @@ min_val = max(min_val-(max_val-min_val)*0.15, 0.)
 ylabel = metric_name
 if metric_name == "rmse":
     ylabel = "RMSE"
-ax = plot_settings.get_wider_axis(double=True)
+# ax = plot_settings.get_wider_axis(double=True)
+plt.figure(figsize=(int(plot_settings.FIG_WIDTH * 2.5), plot_settings.FIG_HEIGHT))
+ax = plt.subplot(1, 1, 1)
 plot_utils.grouped_barplot(
     ax, means_all,
     datasets,
-    xlabel='', ylabel=ylabel, color_legend=labels,
+    xlabel='', ylabel=ylabel, color_legend=None,
     nested_color=colors, nested_errs=stderrs_all, tickloc_top=False, rotangle=0, anchorpoint='center',
     legend_loc='upper left',
     min_val=min_val, scale=2)

@@ -33,8 +33,7 @@ def get_metric(y_true, y_pred, y_train_mean):
 
 root = "./result_indomain"
 root_path_list = [os.path.join(root, x) for x in os.listdir(root)]
-root = "./result_ood"
-root_path_list += [os.path.join(root, x) for x in os.listdir(root)]
+root_path_list.append("./result_ood")
 root = "./result_cross"
 root_path_list += [os.path.join(root, x) for x in os.listdir(root)]
 root = "./result_fep/fep"
@@ -42,7 +41,7 @@ root_path_list += [os.path.join(root, x) for x in os.listdir(root)]
 root = "./result_fep/fep_opls4"
 root_path_list += [os.path.join(root, x) for x in os.listdir(root)]
 
-sup_num_list = ["16", "32", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8"]
+sup_num_list = ["6", "10", "16", "32", "0.2", "0.3", "0.4", "0.5", "0.6", "0.7", "0.8"]
 for root_path in root_path_list:
     for sup_num in sup_num_list:
         path_meta_delta = f"{root_path}/meta_delta"
@@ -82,4 +81,4 @@ for root_path in root_path_list:
             result_meta_fusion[assay_id] = result_assay
         print(get_mean_r2(result_meta_delta), get_mean_r2(result_meta_fusion))
         print("writing to ", f"{path_fusion}/sup_num_{sup_num}.json \n")
-        # json.dump(result_meta_fusion, open(f"{path_fusion}/sup_num_{sup_num}.json", "w"))
+        json.dump(result_meta_fusion, open(f"{path_fusion}/sup_num_{sup_num}.json", "w"))

@@ -27,6 +27,8 @@ class MetaDeltaRegressor(RegressorBase):
         for x_task, y_task, split, assay_idx in zip(xs, ys, splits, assay_idxes):
             y_task = y_task.float().cuda()
             x_task = x_task.float().cuda()
+            if self.args.inverse_ylabel:
+                y_task = -y_task
             if data_batch_knn is None:
                 names_weights_copy, support_loss_each_step, task_losses = self.inner_loop(x_task, y_task, assay_idx,
                                                                                           split,
@@ -49,6 +51,9 @@ class MetaDeltaRegressor(RegressorBase):
             if not is_training_phase:
                 task_losses.append(target_loss)
 
+            if self.args.inverse_ylabel:
+                y_task = -y_task
+                target_preds = -target_preds
             per_task_target_preds.append(target_preds.detach().cpu().numpy())
             metrics = self.get_metric(y_task, target_preds, split)
             metrics["each_step_loss"] = support_loss_each_step
@@ -152,6 +157,7 @@ class MetaDeltaRegressor(RegressorBase):
         query_features_flat = out_embed[tgt_idx]
 
         ddg_sup_std = sup_y.unsqueeze(-1) - sup_y.unsqueeze(0)
+        # rescale = 1.0
         if self.is_training_phase:
             rescale = 1.0
         else:

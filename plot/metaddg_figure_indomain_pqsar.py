@@ -18,7 +18,7 @@ sys.path.append(os.path.join(sys.path[0], '../'))
 warnings.filterwarnings('ignore')
 
 datasets = ["pQSAR-ChEMBL"]
-models = ['meta_delta_fusion', 'transfer_delta', 'maml', 'DKT', 'protonet', 'CNP', 'transfer_qsar', 'RF', 'GPST', 'KNN']
+models = ['meta_delta_fusion', 'transfer_delta', 'maml', 'protonet', 'DKT', 'CNP', 'transfer_qsar', 'RF', 'GPST', 'KNN']
 models_cvt = {'meta_delta_fusion': 'MetaLigand',
               'maml': 'MAML',
               'transfer_delta': 'TransferLigand',
@@ -28,9 +28,9 @@ models_cvt = {'meta_delta_fusion': 'MetaLigand',
 # In[3]:
 metric_name = sys.argv[1]
 if metric_name == "rmse":
-    models = ['meta_delta_fusion', 'transfer_delta', 'maml', 'DKT', 'protonet', 'RF', 'GPST', 'KNN']
+    models = ['meta_delta_fusion', 'transfer_delta', 'maml', 'protonet', 'DKT', 'CNP', 'RF', 'GPST', 'KNN']
 elif metric_name == "R2os":
-    models = ['meta_delta_fusion', 'transfer_delta', 'DKT', 'protonet', 'RF', 'GPST']
+    models = ['meta_delta_fusion', 'transfer_delta', 'protonet', 'DKT', 'RF', 'GPST']
 
 fsmol = [{}]
 for x in models:
@@ -47,7 +47,9 @@ for x in models:
 
 
 # In[4]:
-ax = plot_settings.get_wider_axis(double=True)
+# ax = plot_settings.get_wider_axis(double=True)
+plt.figure(figsize=(int(plot_settings.FIG_WIDTH * 0.75), plot_settings.FIG_HEIGHT))
+ax = plt.subplot(1, 1, 1)
 colors = [plot_settings.get_model_colors(mod) for mod in models]
 labels = [models_cvt.get(x, x) for x in models]
 means_all = []
@@ -68,11 +70,11 @@ min_val = max(min_val-(max_val-min_val)*0.15, 0.)
 ylabel = metric_name
 if metric_name == "rmse":
     ylabel = "RMSE"
-ax = plot_settings.get_wider_axis(double=False)
+ax = plot_settings.get_square_axis()
 plot_utils.grouped_barplot(
     ax, means_all,
     datasets,
-    xlabel='', ylabel=ylabel, color_legend=labels,
+    xlabel='', ylabel=ylabel, color_legend=None,
     nested_color=colors, nested_errs=stderrs_all, tickloc_top=False, rotangle=0, anchorpoint='center',
     legend_loc='upper left',
     min_val=min_val, scale=2)
