@@ -78,7 +78,6 @@ class pQSARMetaDataset(BaseMetaDataset):
 
         self.split_name_train_val_test = pickle.load(open("/home/fengbin/datas/pQSAR/drug_split_id_group1.pickle", "rb"))
         self.split_name_train_val_test["valid"] = self.split_name_train_val_test["val"]
-        json.dump(self.split_name_train_val_test, open("/home/fengbin/datas/PQSAR/pqsar_split_id_group1.json", "w"))
 
         self.Xs = []
         self.smiles_all = []

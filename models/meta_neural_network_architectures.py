@@ -565,8 +565,7 @@ class FCNReLUNormNetworkQSAR(nn.Module):
 
         out = x
         nx = int(out.shape[0] / 2)
-        if mixup:
-            layer_mix = self.args.rng.randint(0, self.num_stages + 1)
+        layer_mix = self.args.rng.randint(0, self.num_stages + 1)
 
         if mixup and layer_mix == 0:
             out = lam * out[:nx, :] + (1 - lam) * out[nx:, :]

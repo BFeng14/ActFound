@@ -74,18 +74,19 @@ def read_gdsc():
             "assays": list(ligand_sets_new.keys())}
 
 
-def read_BDB_merck():
-    datas = json.load(open("/home/fengbin/datas/FEP/fep_data_final.json", "r"))
+def read_FEP_SET():
+    datas = json.load(open("/home/fengbin/datas/FEP/fep_data_final_norepeat_nocharge.json", "r"))
     ligand_sets = {}
     task2opls4 = {}
     pic50s_all = []
+    rmse_all = []
     for k, v in datas.items():
         ligands = []
         opls4_res = []
         errors = []
         for ligand_info in v:
-            pic50_exp = -float(ligand_info["exp_dg"]) - 9.63 + -2.24
-            opls4 = -float(ligand_info["pred_dg"]) - 9.63 + -2.24
+            pic50_exp = -float(ligand_info["exp_dg"]) / 1.363 - 9
+            opls4 = -float(ligand_info["pred_dg"]) / 1.363 - 9
             errors.append(pic50_exp - opls4)
             opls4_res.append(opls4)
             smiles = ligand_info["smiles"]
@@ -98,7 +99,10 @@ def read_BDB_merck():
             pic50s_all.append(pic50_exp)
         ligand_sets[k] = ligands
         task2opls4[k] = np.array(opls4_res)
-    print(np.mean(pic50s_all))
+        rmse = np.sqrt(np.mean(np.square(errors)))
+        r2 = np.corrcoef(opls4_res, [x["pic50_exp"] for x in ligands])[0, 1]**2
+        rmse_all.append(rmse)
+    print("rmse_FEP+(OPLS4)", np.mean(rmse_all))
     return {"ligand_sets": ligand_sets, "assays": list(ligand_sets.keys())}, task2opls4
 
 
@@ -176,7 +180,7 @@ def read_davis():
     return {"ligand_sets": ligand_sets, "assays": list(ligand_sets.keys())}
 
 
-def read_fsmol_assay(split = "train", train_phase=1):
+def read_fsmol_assay(split="train", train_phase=1):
     cache_file = f"/home/fengbin/datas/fsmol/{split}_cache.pkl"
     if os.path.exists(cache_file):
         datas = pickle.load(open(cache_file, "rb"))
@@ -195,35 +199,7 @@ def read_fsmol_assay(split = "train", train_phase=1):
         return datas
 
 
-    # if train_phase == 0 and split == "train":
-    #     return {"ligand_sets": {}, "assays": []}
-    # fsmol_path = f"/home/fengbin/meta_delta/fsmol_data/{split}"
-    # ligand_sets = {}
-    # if split == "test":
-    #     test_file = open("/home/fengbin/meta_delta/fsmol_data/regression_test_adkfift.csv", "r").readlines()
-    #     split_data = [x.split(",")[0] for x in test_file][1:]
-    # else:
-    #     split_path = json.load(open("/home/fengbin/meta_delta/fsmol_data/fsmol-0.1.json", "r"))
-    #     split_data = split_path[split]
-    # for file in tqdm(os.listdir(fsmol_path)):
-    #     assay_id = file.split(".")[0]
-    #     if assay_id not in split_data:
-    #         continue
-    #     file_path = os.path.join(fsmol_path, file)
-    #     with gzip.open(file_path, mode="rt") as f:
-    #         ligands = [json.loads(line) for line in f]  # returns a byte string `b'`
-    #     ligands = [{"smiles": x["SMILES"],
-    #             "pic50_exp": x["LogRegressionProperty"],
-    #             "domain": "fsmol"} for x in ligands]
-    #     ligand_sets[file] = ligands
-    #
-    # ret_dict = {"ligand_sets": ligand_sets, "assays": list(ligand_sets.keys())}
-    # if not os.path.exists(cache_file):
-    #     pickle.dump(ret_dict, open(cache_file, "wb"))
-    # return ret_dict
-
-
-def read_chembl_cell_assay():
+def read_chembl_assay():
     datas = csv.reader(open("/home/fengbin/datas/chembl/chembl_processed_chembl32.csv", "r"),
                        delimiter=',')
     assay_id_dicts = {}
@@ -302,7 +278,7 @@ def read_chembl_cell_assay_OOD():
         std_rel = line[5]
         if std_rel != "=":
             continue
-        pic50_exp = -math.log10(float(line[6])) - -1.66 + -2.249
+        pic50_exp = math.log10(float(line[6])) - 1.66 + -2.249
         affi_prefix = line[5]
         pic50s.append(pic50_exp)
         ligand_info = {
@@ -327,44 +303,7 @@ def read_chembl_cell_assay_OOD():
         assay_id_dicts_new[assay_id] = ligands
 
     assay_ids = list(assay_id_dicts_new.keys())
-    random.seed(1111)
-    random.shuffle(assay_ids)
-    assay_id_dicts_ret = {}
-    for k in assay_ids[-500:]:
-        assay_id_dicts_ret[k] = assay_id_dicts_new[k]
-    return {"ligand_sets": assay_id_dicts_new, "assays": assay_ids[-500:], "test_assay": assay_ids[-500:]}
-
-
-def load_LIT_PCBA():
-    HTS_path = "/home/fengbin/datas/HTS"
-    assay_id_dicts = {}
-    for target_name in os.listdir(HTS_path):
-        active_t_path = os.path.join(HTS_path, target_name, "active_T.smi")
-        if not os.path.exists(active_t_path):
-            continue
-        active_v_path = os.path.join(HTS_path, target_name, "active_V.smi")
-        active = list(open(active_t_path, "r").readlines()) + list(open(active_v_path, "r").readlines())
-        negative_t_path = os.path.join(HTS_path, target_name, "inactive_T.smi")
-        negative_v_path = os.path.join(HTS_path, target_name, "inactive_V.smi")
-        negative = list(open(negative_t_path, "r").readlines()) + list(open(negative_v_path, "r").readlines())
-
-        active = [x.split(" ")[0] for x in active]
-        negative = [x.split(" ")[0] for x in negative][:len(active)*10]
-        ligands = []
-        for x in active:
-            ligand_info = {
-                "smiles": x,
-                "pic50_exp": 3 ,
-            }
-            ligands.append(ligand_info)
-        for x in negative:
-            ligand_info = {
-                "smiles": x,
-                "pic50_exp": 0 ,
-            }
-            ligands.append(ligand_info)
-        assay_id_dicts[target_name] = ligands
-    return {"ligand_sets": assay_id_dicts, "assays": list(assay_id_dicts.keys())}
+    return {"ligand_sets": assay_id_dicts_new, "assays": assay_ids}
 
 
 def read_pQSAR_assay():
@@ -438,71 +377,22 @@ def read_pQSAR_assay():
 
 def read_bdb_cross():
     BDB_all = read_BDB_per_assay()
-    save_path = '/home/fengbin/datas/BDB/split_name_train_val_test_bdb.pkl'
-    split_name_train_val_test = pickle.load(open(save_path, "rb"))
+    save_path = '/home/fengbin/datas/BDB/bdb_split.json'
+    split_name_train_val_test = json.load(open(save_path, "r"))
     repeat_ids = set(
-        [x.strip() for x in open("/home/fengbin/meta_delta/scripts/cross_repeat/c2b_repeat", "r").readlines()])
+        [x.strip() for x in open("/home/fengbin/datas/BDB/c2b_repeat", "r").readlines()])
     test_ids = [x for x in split_name_train_val_test['test'] if x not in repeat_ids]
     return {"assays": test_ids, "ligand_sets": {aid:BDB_all["ligand_sets"][aid] for aid in test_ids}}
 
 def read_chembl_cross():
-    chembl_all = read_chembl_cell_assay()
-    save_path = '/home/fengbin/datas/chembl/chembl_split_new.json'
+    chembl_all = read_chembl_assay()
+    save_path = '/home/fengbin/datas/chembl/chembl_split.json'
     split_name_train_val_test = json.load(open(save_path, "r"))
     repeat_ids = set(
-        [x.strip() for x in open("/home/fengbin/meta_delta/scripts/cross_repeat/b2c_repeat", "r").readlines()])
+        [x.strip() for x in open("/home/fengbin/datas/chembl/b2c_repeat", "r").readlines()])
     test_ids = [x for x in split_name_train_val_test['test'] if x not in repeat_ids]
     return {"assays": test_ids, "ligand_sets": {aid:chembl_all["ligand_sets"][aid] for aid in test_ids}}
 
 
 if __name__ == "__main__":
-    read_BDB_merck()
-#     datas = read_chembl_cell_assay()["ligand_sets"]
-#     assay_infos = {}
-#     units = {}
-#     for assay_id, v in datas.items():
-#         ligand_num = len(v)
-#         bao_endpoint = v[0]["bao_endpoint"]
-#         bao_format = v[0]["bao_format"]
-#         assay_type = v[0]["chembl_assay_type"]
-#         std_type = v[0]["assay_type"]
-#         unit = v[0]["unit"]
-#         if unit not in units:
-#             units[unit] = 0
-#         units[unit] += 1
-#         assay_infos[assay_id] = {
-#             "ligand_num": ligand_num,
-#             "bao_endpoint": bao_endpoint,
-#             "bao_format": bao_format,
-#             "assay_type": assay_type,
-#             "std_type": std_type,
-#             "unit": unit
-#         }
-#     print(units)
-#     json.dump(assay_infos, open("assay_infos.json", "w"))
-#     """BAO_0000218: organism-based format
-# BAO_0000219: cell-based format
-# BAO_0000220: subcellular format
-# BAO_0000221: tissue-based format
-# BAO_0000223: protein complex format
-# BAO_0000224: protein format
-# BAO_0000225: nucleic acid format
-# BAO_0000249: cell membrane format
-# BAO_0000357: single protein format"""
-
-    # a = read_chembl_cell_assay_OOD()
-    # print(len(a["ligand_sets"]))
-    # print(np.mean([len(v) for v in a["ligand_sets"].values()]))
-    # unique_ligand = set()
-    # for v in a["ligand_sets"].values():
-    #     for x in v:
-    #         unique_ligand.add(x["smiles"])
-    # print(len(unique_ligand))
-    # splits = {"train": [], "valid": [], "test": [x for x in a['assays'] if os.path.exists(f"/home/fengbin/datas/expert/davis_feat/{x}.jsonl.gz")]}
-    # save_dir = "/home/fengbin/datas/expert/davis_split/split_all_test.json"
-    # json.dump(splits, open(save_dir, "w"))
-
-    # stds = []
-    # for ligands in a["ligand_sets"].values():
-    #     stds.append(np.std([x["pic50_exp"] for x in ligands]))
-    # print(np.mean(stds))
+    read_FEP_SET()

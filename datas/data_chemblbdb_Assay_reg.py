@@ -22,7 +22,7 @@ class CHEMBLBDBMetaDataset(BaseMetaDataset):
         if datasource == "bdb":
             experiment_train = preprocess.read_BDB_per_assay()      
         elif datasource == "chembl":
-            experiment_train = preprocess.read_chembl_cell_assay()
+            experiment_train = preprocess.read_chembl_assay()
         else:
             print("dataset not exist")
             exit()
@@ -39,9 +39,8 @@ class CHEMBLBDBMetaDataset(BaseMetaDataset):
             os.system(f"mkdir -p {save_dir}")
 
         if datasource == "bdb":
-            save_path = '/home/fengbin/datas/BDB/split_name_train_val_test_bdb.pkl'
-            self.split_name_train_val_test = pickle.load(open(save_path, "rb"))
-            self.split_name_train_val_test['valid'] = self.split_name_train_val_test['val']
+            save_path = '/home/fengbin/datas/BDB/bdb_split.json'
+            self.split_name_train_val_test = json.load(open(save_path, "r"))
             davis_repeat_bdb = list([x.strip() for x in open("/home/fengbin/meta_delta/scripts/cross_repeat/bdb_2_davis_repeat", "r").readlines()])
             print("number of training set before filter:", len(self.split_name_train_val_test['train']))
             fep_repeat_bdb = ["Endothelial-PAS-domain-containing-protein-1/9049_1_1.tsv", "Hepatocyte-growth-factor-receptor/50045505_3_1.tsv",
@@ -52,14 +51,14 @@ class CHEMBLBDBMetaDataset(BaseMetaDataset):
                                                        x not in set(fep_repeat_bdb + davis_repeat_bdb)]
             print("number of training set after filter:", len(self.split_name_train_val_test['train']))
         else:
-            save_path = '/home/fengbin/datas/chembl/chembl_split_new.json'
+            save_path = '/home/fengbin/datas/chembl/chembl_split.json'
             self.split_name_train_val_test = json.load(open(save_path, "r"))
 
             fep_repeat_chembl = ['CHEMBL3404455_nM_IC50', 'CHEMBL3270296_nM_IC50',
                                  'CHEMBL3779191_nM_IC50', 'CHEMBL4322250_nM_IC50',
                                  'CHEMBL1101849_nM_IC50',  'CHEMBL860181_nM_IC50',
                                  'CHEMBL1769102_nM_IC50', 'CHEMBL2390026_nM_Ki',
-                                 'CHEMBL2421816_nM_Ki']
+                                 'CHEMBL2421816_nM_Ki', 'CHEMBL896126_nM_Ki']
             davis_repeat_chembl = []
             print("number of training set before filter:", len(self.split_name_train_val_test['train']))
             self.split_name_train_val_test['train'] = [x for x in self.split_name_train_val_test['train'] if
@@ -80,21 +79,15 @@ class CHEMBLBDBMetaDataset(BaseMetaDataset):
         # test set
         if self.args.expert_test != "":
             if self.args.expert_test == "fep":
-                experiment_test, _ = preprocess.read_BDB_merck()
+                experiment_test, _ = preprocess.read_FEP_SET()
             elif self.args.expert_test == "fep_opls4":
-                experiment_test, self.assayid2opls4_dict = preprocess.read_BDB_merck()
-            elif self.args.expert_test == "gdsc":
-                experiment_test = preprocess.read_gdsc()
+                experiment_test, self.assayid2opls4_dict = preprocess.read_FEP_SET()
             elif self.args.expert_test == "kiba":
                 experiment_test = preprocess.read_kiba()
             elif self.args.expert_test == "davis":
                 experiment_test = preprocess.read_davis()
             elif self.args.expert_test == "ood":
                 experiment_test = preprocess.read_chembl_cell_assay_OOD()
-            elif  self.args.expert_test == "pcba":
-                experiment_test = preprocess.load_LIT_PCBA()
-            elif self.args.expert_test == "fsmol":
-                experiment_test = preprocess.read_fsmol_assay(split = "test")
             else:
                 print("no expert_test", self.args.expert_test)
                 exit()

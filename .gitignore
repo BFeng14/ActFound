@@ -1,3 +1,6 @@
 .idea/
 *.pdf
 *.xml
+*.svg
+*.png
+*.lnk

@@ -15,7 +15,7 @@ from learning_system import system_selector
 def get_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--datasource', default='chembl', type=str)
-    parser.add_argument('--model_name', default='meta_delta', type=str)
+    parser.add_argument('--model_name', default='actfound', type=str)
     parser.add_argument('--dim_w', default=2048, type=int, help='dimension of w')
     parser.add_argument('--hid_dim', default=2048, type=int, help='dimension of w')
     parser.add_argument('--num_stages', default=2, type=int, help='num stages')
@@ -243,6 +243,14 @@ def main():
             json.dump(res_dict, open(os.path.join(write_dir, f"sup_num_{args.test_sup_num}.json"), "w"))
     elif args.train == 2:
         test_data_all = dataloader.get_test_batches()
+        model_file = '{0}/{2}/model_{1}'.format(args.logdir, args.test_epoch, exp_string)
+        if not os.path.exists(model_file):
+            model_file = '{0}/{1}/model_best'.format(args.logdir, exp_string)
+        try:
+            model.load_state_dict(torch.load(model_file))
+        except Exception as e:
+            print(e)
+            model.load_state_dict(torch.load(model_file), strict=False)
 
         save_dir = "./ligand_feats/ligands_bdb_indomain_test_meta_delta"
         os.system(f"mkdir -p {save_dir}")
@@ -250,6 +258,7 @@ def main():
             ligand_num = len(cur_data[1][0])
             x_task = cur_data[0][0]
             y_task = cur_data[1][0]
+            smiles = cur_data[-1][0]
             x_task = x_task.float().cuda()
             assay_name = cur_data[3][0].replace("/", "_")
             feat, _ = model.regressor.forward_feat(x=x_task, num_step=0)
@@ -258,7 +267,7 @@ def main():
             # r2 = np.corrcoef(y_task, pred_y)[0, 1]
             # print(assay_name, r2)
             np.save(f"{save_dir}/{assay_name}", feat.cpu().numpy())
-            np.save(f"{save_dir}/{assay_name}_y", y_task)
+            json.dump(smiles, open(f"{save_dir}/{assay_name}_smiles.json", "w"))
         exit()
 
 
