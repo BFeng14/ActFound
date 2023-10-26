@@ -75,7 +75,6 @@ def get_args():
     parser.add_argument('--knn_dist_thres', default=0.3, type=float)
     parser.add_argument('--begin_lrloss_epoch', default=50, type=int)
     parser.add_argument('--lrloss_weight', default=35., type=float)
-    parser.add_argument('--begin_meta_epoch', default=40, type=int)
     return parser
 
 
