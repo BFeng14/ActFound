@@ -6,10 +6,10 @@ from torch.utils.data import Dataset, sampler, DataLoader
 import tqdm
 import pickle
 import torch
-import datas.load_dataset as preprocess
+import dataset.load_dataset as preprocess
 import copy
 from multiprocessing import Pool
-from datas.data_base import preprocess_assay, BaseMetaDataset
+from dataset.data_base import preprocess_assay, BaseMetaDataset
 
 
 class CHEMBLBDBMetaDataset(BaseMetaDataset):
@@ -39,7 +39,7 @@ class CHEMBLBDBMetaDataset(BaseMetaDataset):
             os.system(f"mkdir -p {save_dir}")
 
         if datasource == "bdb":
-            save_path = '/home/fengbin/datas/BDB/bdb_split.json'
+            save_path = '/home/fengbin/dataset/BDB/bdb_split.json'
             self.split_name_train_val_test = json.load(open(save_path, "r"))
             davis_repeat_bdb = list([x.strip() for x in open("/home/fengbin/meta_delta/scripts/cross_repeat/bdb_2_davis_repeat", "r").readlines()])
             print("number of training set before filter:", len(self.split_name_train_val_test['train']))
@@ -51,7 +51,7 @@ class CHEMBLBDBMetaDataset(BaseMetaDataset):
                                                        x not in set(fep_repeat_bdb + davis_repeat_bdb)]
             print("number of training set after filter:", len(self.split_name_train_val_test['train']))
         else:
-            save_path = '/home/fengbin/datas/chembl/chembl_split.json'
+            save_path = '/home/fengbin/dataset/chembl/chembl_split.json'
             self.split_name_train_val_test = json.load(open(save_path, "r"))
 
             fep_repeat_chembl = ['CHEMBL3404455_nM_IC50', 'CHEMBL3270296_nM_IC50',

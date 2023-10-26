@@ -9,7 +9,7 @@ import math
 import json
 
 from tqdm import tqdm
-from datas import dataset_constructor
+from dataset import dataset_constructor
 from learning_system import system_selector
 
 def get_args():

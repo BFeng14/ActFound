@@ -3,8 +3,10 @@ import rdkit
 from rdkit import Chem
 from rdkit import DataStructs
 from rdkit.ML.Cluster import Butina
+absolute_path = os.path.abspath(__file__)
+DATA_PATH = "/" + "/".join(absolute_path.split("/")[:-2]+["datas"])
 
-f = open("/home/fengbin/datas/BDB/BindingDB_All.tsv", "r").readlines()
+f = open(f"{DATA_PATH}/BDB/BindingDB_All.tsv", "r").readlines()
 target_link_set = set()
 
 from tqdm import tqdm
@@ -22,7 +24,7 @@ def get_dist(fps):
 
 
 def get_entry_assay_dict():
-    f = "/home/fengbin/datas/BDB/ENTRY_ASSAY_export_2022-12-26_120436.csv"
+    f = f"{DATA_PATH}/BDB/ENTRY_ASSAY_export_2022-12-26_120436.csv"
     ret_dict = {}
     for i, line in enumerate(open(f, "r").readlines()):
         if i == 0:
@@ -162,9 +164,9 @@ for tgt_str, assays in tqdm(per_target_entry_assay_dict.items()):
         target_name = "-".join(target_name.split(" "))
 
         if "polymerid" in tgt_str:
-            save_dir = f"/home/fengbin/datas/BDB/polymer/{target_name}"
+            save_dir = f"{DATA_PATH}/BDB/polymer/{target_name}"
         elif "complexid" in tgt_str:
-            save_dir = f"/home/fengbin/datas/BDB/complex/{target_name}"
+            save_dir = f"{DATA_PATH}/BDB/complex/{target_name}"
         else:
             print("bugggggg", tgt_str)
             continue

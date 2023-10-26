@@ -5,10 +5,11 @@ import random
 import csv
 from collections import OrderedDict
 import json, pickle
-import gzip
+absolute_path = os.path.abspath(__file__)
+DATA_PATH = "/" + "/".join(absolute_path.split("/")[:-2]+["datas"])
 
 def read_BDB_per_assay():
-    data_dir = "/home/fengbin/datas/BDB/polymer"
+    data_dir = f"{DATA_PATH}/BDB/polymer"
     assays = []
     ligand_sets = {}
     split_cnt = 0
@@ -61,7 +62,7 @@ def read_BDB_per_assay():
 
 
 def read_gdsc():
-    data_file = "/home/fengbin/datas/gdsc/data_dict.pkl"
+    data_file = f"{DATA_PATH}/gdsc/data_dict.pkl"
     ligand_sets = pickle.load(open(data_file, "rb"))
     ligand_sets_new = {}
     for k, v in ligand_sets.items():
@@ -75,7 +76,7 @@ def read_gdsc():
 
 
 def read_FEP_SET():
-    datas = json.load(open("/home/fengbin/datas/FEP/fep_data_final_norepeat_nocharge.json", "r"))
+    datas = json.load(open(f"{DATA_PATH}/FEP/fep_data_final_norepeat_nocharge.json", "r"))
     ligand_sets = {}
     task2opls4 = {}
     pic50s_all = []
@@ -100,18 +101,18 @@ def read_FEP_SET():
         ligand_sets[k] = ligands
         task2opls4[k] = np.array(opls4_res)
         rmse = np.sqrt(np.mean(np.square(errors)))
-        r2 = np.corrcoef(opls4_res, [x["pic50_exp"] for x in ligands])[0, 1]**2
-        rmse_all.append(rmse)
+        r2 = np.corrcoef(opls4_res, [x["pic50_exp"] for x in ligands])[0, 1]
+        rmse_all.append(r2)
     print("rmse_FEP+(OPLS4)", np.mean(rmse_all))
     return {"ligand_sets": ligand_sets, "assays": list(ligand_sets.keys())}, task2opls4
 
 
 def read_kiba():
     ligand_list = []
-    ligands_dict = json.load(open("/home/fengbin/datas/DeepDTA/data/kiba/ligands_can.txt"), object_pairs_hook=OrderedDict)
+    ligands_dict = json.load(open(f"{DATA_PATH}/DeepDTA/data/kiba/ligands_can.txt"), object_pairs_hook=OrderedDict)
     for ligand_id, smiles in ligands_dict.items():
         ligand_list.append((ligand_id, smiles))
-    Y = pickle.load(open("/home/fengbin/datas/DeepDTA/data/kiba/Y", "rb"), encoding='bytes').transpose()
+    Y = pickle.load(open(f"{DATA_PATH}/DeepDTA/data/kiba/Y", "rb"), encoding='bytes').transpose()
     ligand_sets = {}
     stds = []
     for assay_idx in range(Y.shape[0]):
@@ -150,10 +151,10 @@ def read_kiba():
 
 def read_davis():
     ligand_list = []
-    ligands_dict = json.load(open("/home/fengbin/datas/DeepDTA/data/davis/ligands_can.txt"), object_pairs_hook=OrderedDict)
+    ligands_dict = json.load(open(f"{DATA_PATH}/DeepDTA/data/davis/ligands_can.txt"), object_pairs_hook=OrderedDict)
     for ligand_id, smiles in ligands_dict.items():
         ligand_list.append((ligand_id, smiles))
-    Y = pickle.load(open("/home/fengbin/datas/DeepDTA/data/davis/Y", "rb"), encoding='bytes').transpose()
+    Y = pickle.load(open(f"{DATA_PATH}/DeepDTA/data/davis/Y", "rb"), encoding='bytes').transpose()
     ligand_sets = {}
 
     stds = []
@@ -181,7 +182,7 @@ def read_davis():
 
 
 def read_fsmol_assay(split="train", train_phase=1):
-    cache_file = f"/home/fengbin/datas/fsmol/{split}_cache.pkl"
+    cache_file = f"{DATA_PATH}/fsmol/{split}_cache.pkl"
     if os.path.exists(cache_file):
         datas = pickle.load(open(cache_file, "rb"))
         for k, v in datas["ligand_sets"].items():
@@ -200,7 +201,7 @@ def read_fsmol_assay(split="train", train_phase=1):
 
 
 def read_chembl_assay():
-    datas = csv.reader(open("/home/fengbin/datas/chembl/chembl_processed_chembl32.csv", "r"),
+    datas = csv.reader(open(f"{DATA_PATH}/chembl/chembl_processed_chembl32.csv", "r"),
                        delimiter=',')
     assay_id_dicts = {}
 
@@ -259,7 +260,7 @@ def read_chembl_assay():
 
 
 def read_chembl_cell_assay_OOD():
-    datas = csv.reader(open("/home/fengbin/datas/chembl/chembl_processed_chembl32_percent.csv", "r"),
+    datas = csv.reader(open(f"{DATA_PATH}/chembl/chembl_processed_chembl32_percent.csv", "r"),
                        delimiter=',')
     assay_id_dicts = {}
     # kd_assay_set = set()
@@ -307,8 +308,8 @@ def read_chembl_cell_assay_OOD():
 
 
 def read_pQSAR_assay():
-    filename = "/home/fengbin/datas/pQSAR/ci9b00375_si_002.txt"
-    compound_filename = "/home/fengbin/datas/pQSAR/ci9b00375_si_003.txt"
+    filename = f"{DATA_PATH}/pQSAR/ci9b00375_si_002.txt"
+    compound_filename = f"{DATA_PATH}/pQSAR/ci9b00375_si_003.txt"
     # first of all, read all the compounds
     compound_file = open(compound_filename, 'r', encoding='UTF-8', errors='ignore')
     clines = compound_file.readlines()
@@ -377,19 +378,19 @@ def read_pQSAR_assay():
 
 def read_bdb_cross():
     BDB_all = read_BDB_per_assay()
-    save_path = '/home/fengbin/datas/BDB/bdb_split.json'
+    save_path = '/home/fengbin/dataset/BDB/bdb_split.json'
     split_name_train_val_test = json.load(open(save_path, "r"))
     repeat_ids = set(
-        [x.strip() for x in open("/home/fengbin/datas/BDB/c2b_repeat", "r").readlines()])
+        [x.strip() for x in open(f"{DATA_PATH}/BDB/c2b_repeat", "r").readlines()])
     test_ids = [x for x in split_name_train_val_test['test'] if x not in repeat_ids]
     return {"assays": test_ids, "ligand_sets": {aid:BDB_all["ligand_sets"][aid] for aid in test_ids}}
 
 def read_chembl_cross():
     chembl_all = read_chembl_assay()
-    save_path = '/home/fengbin/datas/chembl/chembl_split.json'
+    save_path = '/home/fengbin/dataset/chembl/chembl_split.json'
     split_name_train_val_test = json.load(open(save_path, "r"))
     repeat_ids = set(
-        [x.strip() for x in open("/home/fengbin/datas/chembl/b2c_repeat", "r").readlines()])
+        [x.strip() for x in open(f"{DATA_PATH}/chembl/b2c_repeat", "r").readlines()])
     test_ids = [x for x in split_name_train_val_test['test'] if x not in repeat_ids]
     return {"assays": test_ids, "ligand_sets": {aid:chembl_all["ligand_sets"][aid] for aid in test_ids}}
 

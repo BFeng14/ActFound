@@ -45,8 +45,6 @@ for x in models:
         fepset[1][x].append(math.sqrt(d))
         mean += d
 
-
-
 ax = plot_settings.get_wider_axis(double=True)
 colors = [plot_settings.get_model_colors(mod) for mod in models]
 labels = [models_cvt.get(x, x) for x in models]

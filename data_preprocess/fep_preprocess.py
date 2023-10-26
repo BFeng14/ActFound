@@ -3,6 +3,8 @@ import os
 from rdkit import Chem
 from rdkit.Chem import MolStandardize
 from rdkit.Chem.MolStandardize import rdMolStandardize
+absolute_path = os.path.abspath(__file__)
+DATA_PATH = "/" + "/".join(absolute_path.split("/")[:-2]+["datas"])
 
 def remove_hs(d3o_mol):
     params = Chem.RemoveHsParameters()
@@ -27,11 +29,11 @@ def converter(file_name):
     return convert_dict
 
 
-result_dir = "/home/fengbin/datas/FEP/public_BFE_benchmark/results"
+result_dir = f"{DATA_PATH}/FEP/public_BFE_benchmark/results"
 data_dict = {}
 for file in os.listdir(result_dir):
     assay_name = file.split("_")[0]
-    sdf_file = f"/home/fengbin/datas/FEP/public_BFE_benchmark/sdfs/{assay_name}_ligands.sdf"
+    sdf_file = f"{DATA_PATH}/FEP/public_BFE_benchmark/sdfs/{assay_name}_ligands.sdf"
     convert_dict = converter(sdf_file)
     inchi_set = set()
     ligands = []
@@ -59,4 +61,4 @@ for file in os.listdir(result_dir):
     data_dict[assay_name] = ligands
 
 import json
-json.dump(data_dict, open("/home/fengbin/datas/FEP/fep_data_final_norepeat_nocharge.json", "w"))
+json.dump(data_dict, open(f"{DATA_PATH}/FEP/fep_data_final_norepeat_nocharge.json", "w"))

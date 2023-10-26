@@ -1,6 +1,9 @@
 import csv
+import os
+absolute_path = os.path.abspath(__file__)
+DATA_PATH = "/" + "/".join(absolute_path.split("/")[:-2]+["datas"])
 
-datas = csv.reader(open("/home/fengbin/datas/chembl/chembl32_0307/cnt_actv.csv", "r"), delimiter=',')
+datas = csv.reader(open(f"{DATA_PATH}/chembl/chembl32_0307/cnt_actv.csv", "r"), delimiter=',')
 
 selected_units_c = ['nM', 'uM', 'mm', 'umol.kg-1', 'mM', 'uM kg-1', "10'-2umol", # 47776
                   'M', 'nM kg-1', 'um', 'umol/Kg', 'nm', "10'-6M", "10'-7M", '10^-2mm', 'nmol', ] # 47966
@@ -11,7 +14,7 @@ selected_units_m = ['ug.mL-1', 'ug ml-1', 'mg.kg-1', 'mg kg-1',
 selected_units_p = ["%"]
 
 smile_dict = {}
-smile_csv = csv.reader(open("/home/fengbin/datas/chembl/smi_chembl32/molsmi.csv", "r"), delimiter=',')
+smile_csv = csv.reader(open(f"{DATA_PATH}/chembl/smi_chembl32/molsmi.csv", "r"), delimiter=',')
 for line in smile_csv:
     molregno = line[0]
     canonical_smiles = line[1]
@@ -173,7 +176,7 @@ with Pool(16) as p:
 print(max(len_pair_all), min(len_pair_all))
 # import pickle
 # pickle.dump(fp_dict, open("/home/fengbin/CHEMBL/chembl_fp_cache.pkl", "wb"))
-with open("/home/fengbin/datas/chembl/chembl_processed_chembl32.csv", "w") as f:
+with open(f"{DATA_PATH}/chembl/chembl_processed_chembl32.csv", "w") as f:
     writer = csv.writer(f)
     for assay_id, lines in assay_id_dicts_final.items():
         writer.writerows(lines)

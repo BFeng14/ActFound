@@ -1,8 +1,8 @@
-from datas.data_gdsc_reg import GDSCMetaDataset
-from datas.data_pqsar_Assay_reg import pQSARMetaDataset
-from datas.data_fsmol_Assay_reg import FSSMOLMetaDataset
-from datas.data_chemblbdb_Assay_reg import CHEMBLBDBMetaDataset
-from datas.data_base import SystemDataLoader
+from dataset.data_gdsc_reg import GDSCMetaDataset
+from dataset.data_pqsar_Assay_reg import pQSARMetaDataset
+from dataset.data_fsmol_Assay_reg import FSSMOLMetaDataset
+from dataset.data_chemblbdb_Assay_reg import CHEMBLBDBMetaDataset
+from dataset.data_base import SystemDataLoader
 
 
 def dataset_constructor(args):

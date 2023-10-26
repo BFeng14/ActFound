@@ -7,11 +7,11 @@ import tqdm
 import concurrent.futures
 import pickle
 import torch
-import datas.load_dataset as preprocess
+import dataset.load_dataset as preprocess
 import copy
 import random
 from multiprocessing import Pool
-from datas.data_base import preprocess_assay, BaseMetaDataset
+from dataset.data_base import preprocess_assay, BaseMetaDataset
 from rdkit import Chem
 from rdkit.Chem import rdFingerprintGenerator
 from rdkit import DataStructs
@@ -76,7 +76,7 @@ class pQSARMetaDataset(BaseMetaDataset):
         if not os.path.exists(save_dir):
             os.system(f"mkdir -p {save_dir}")
 
-        self.split_name_train_val_test = pickle.load(open("/home/fengbin/datas/pQSAR/drug_split_id_group1.pickle", "rb"))
+        self.split_name_train_val_test = pickle.load(open(f"{DATA_PATH}/pQSAR/drug_split_id_group1.pickle", "rb"))
         self.split_name_train_val_test["valid"] = self.split_name_train_val_test["val"]
 
         self.Xs = []
@@ -128,7 +128,7 @@ class pQSARMetaDataset(BaseMetaDataset):
                     print(assay_id)
                     data_cnt += 1
 
-        # pickle.dump(fp_cache, open("/home/fengbin/QSAR/datas/chembl/chembl_fp.pkl", "wb"))
+        # pickle.dump(fp_cache, open("/home/fengbin/QSAR/dataset/chembl/chembl_fp.pkl", "wb"))
         train_cnt = len(self.train_indices)
         val_cnt = len(self.val_indices)
         test_cnt = len(self.test_indices)
