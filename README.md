@@ -12,7 +12,7 @@ Compound bioactivity plays an important role in drug development and discovery. 
 ### download data
 All datas, model checkpoints and test results are available on the Google Drive.
 - Download Link: https://drive.google.com/drive/folders/1x-F_hbQr_pXFEA5qLCkd7dIr9a_1L3aJ?usp=drive_link
-- Please first download all files necessary, and unzip them all. Please put /datas dir under the project root, so that the code can find it during running.
+- Please first download all files necessary, and unzip them all. Please put "datas" dir under the project root, so that the code can find it during running.
 - For model inference, please download checkpoints_all.tar.gz, extract all files and put them the project root.
 - For plot figure in our paper, please download test_results_all.tar.gz, extract all files, put them the project root, and rename the dir into test_results.
 - Please make sure that "datas", "checkpoints_all"(necessary for inference), "test_results"(necessary for plot) all correctly placed in to project root.
@@ -38,7 +38,7 @@ python main_reg.py --datasource=${DATA_SOURCE} --logdir ${MODEL_DIR} --model_nam
 ### run model training
 For ActFound training, please first make sure that the training data is correctly downloaded, and then simply run main_reg.py. Training of ActFound on ChEMBL takes nearly 3 days, training on BindingDB takes 30 hours.
 - For training on other dataset, please replace DATA_SOURCE. 
-- For training on other model, please refer to "learning_system/__init__.py", and change the MODEL_NAME.
+- For training on other model, please refer to "learning_system/\_\_init__.py", and change the MODEL_NAME.
 
 ```bash
 DATA_SOURCE="chembl"
