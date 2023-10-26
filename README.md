@@ -11,7 +11,11 @@ Compound bioactivity plays an important role in drug development and discovery. 
 
 ### download data
 All datas, model checkpoints and test results are available on the Google Drive.
-Download Link: https://drive.google.com/drive/folders/1x-F_hbQr_pXFEA5qLCkd7dIr9a_1L3aJ?usp=drive_link
+- Download Link: https://drive.google.com/drive/folders/1x-F_hbQr_pXFEA5qLCkd7dIr9a_1L3aJ?usp=drive_link
+- Please first download all files necessary, and unzip them all. Please put /datas dir under the project root, so that the code can find it during running.
+- For model inference, please download checkpoints_all.tar.gz, extract all files and put them the project root.
+- For plot figure in our paper, please download test_results_all.tar.gz, extract all files, put them the project root, and rename the dir into test_results.
+- Please make sure that "datas", "checkpoints_all"(necessary for inference), "test_results"(necessary for plot) all correctly placed in to project root.
 
 ### run model inference
 For model inference only, please download the corresponding file from the google drive, and simply run main_reg.py. The checkpoints for models trained on ChEMBL, BindingDB, FS-MOL and pQSAR-ChEMBL are avaliable on the google drive. 
@@ -21,7 +25,7 @@ For model inference only, please download the corresponding file from the google
 - For testing on other dataset (KIBA, Davis, FEP, fep_opls4, activity) using model trained on ChEMBL, please simple add "--expert_test test_domain_name". (fep_opls4 means that using the result of FEP+(OPLS4) for fine-tuning, and activity means ChEMBL-Activity)
 - For testing using other models (including ActFound(transfer), MAML, ProtoNet, TransferQSAR), please refer to learning_system/__init__.py, and change the MODEL_NAME.
 - To get better result, please run another inference using ActFound(transfer), and fusion the result of ActFound and ActFound(transfer) using fusion_result.py. The result on our paper utilzed both KNN_MAML and fusion method.
-
+- For inference on other datasources, please follow the code in "dataset/load_dataset.py" (for example read_FEP_SET), and load your dataset in "dataset/data_chemblbdb_Assay_reg.py".
 ```bash
 DATA_SOURCE="chembl"
 MODEL_DIR="path_to_load_model_checkpoint"
@@ -34,7 +38,7 @@ python main_reg.py --datasource=${DATA_SOURCE} --logdir ${MODEL_DIR} --model_nam
 ### run model training
 For ActFound training, please first make sure that the training data is correctly downloaded, and then simply run main_reg.py. Training of ActFound on ChEMBL takes nearly 3 days, training on BindingDB takes 30 hours.
 - For training on other dataset, please replace DATA_SOURCE. 
-- For training on other model, please refer to learning_system/__init__.py, and change the MODEL_NAME.
+- For training on other model, please refer to "learning_system/__init__.py", and change the MODEL_NAME.
 
 ```bash
 DATA_SOURCE="chembl"

@@ -4,7 +4,7 @@ from rdkit import Chem
 from rdkit.Chem import MolStandardize
 from rdkit.Chem.MolStandardize import rdMolStandardize
 absolute_path = os.path.abspath(__file__)
-DATA_PATH = "/" + "/".join(absolute_path.split("/")[:-2]+["datas"])
+DATA_PATH = "/".join(absolute_path.split("/")[:-2]+["datas"])
 
 def remove_hs(d3o_mol):
     params = Chem.RemoveHsParameters()

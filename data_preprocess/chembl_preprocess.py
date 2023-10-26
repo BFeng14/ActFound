@@ -1,7 +1,7 @@
 import csv
 import os
 absolute_path = os.path.abspath(__file__)
-DATA_PATH = "/" + "/".join(absolute_path.split("/")[:-2]+["datas"])
+DATA_PATH = "/".join(absolute_path.split("/")[:-2]+["datas"])
 
 datas = csv.reader(open(f"{DATA_PATH}/chembl/chembl32_0307/cnt_actv.csv", "r"), delimiter=',')
 

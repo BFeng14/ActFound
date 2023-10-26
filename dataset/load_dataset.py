@@ -6,7 +6,7 @@ import csv
 from collections import OrderedDict
 import json, pickle
 absolute_path = os.path.abspath(__file__)
-DATA_PATH = "/" + "/".join(absolute_path.split("/")[:-2]+["datas"])
+DATA_PATH = "/".join(absolute_path.split("/")[:-2]+["datas"])
 
 def read_BDB_per_assay():
     data_dir = f"{DATA_PATH}/BDB/polymer"

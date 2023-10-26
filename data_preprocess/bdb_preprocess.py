@@ -4,7 +4,7 @@ from rdkit import Chem
 from rdkit import DataStructs
 from rdkit.ML.Cluster import Butina
 absolute_path = os.path.abspath(__file__)
-DATA_PATH = "/" + "/".join(absolute_path.split("/")[:-2]+["datas"])
+DATA_PATH = "/".join(absolute_path.split("/")[:-2]+["datas"])
 
 f = open(f"{DATA_PATH}/BDB/BindingDB_All.tsv", "r").readlines()
 target_link_set = set()
