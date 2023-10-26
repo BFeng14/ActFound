@@ -7,7 +7,7 @@ import tqdm
 import concurrent.futures
 import pickle
 import torch
-import datas.preprocess as preprocess
+import datas.load_dataset as preprocess
 import copy
 from multiprocessing import Pool
 from datas.data_base import preprocess_assay, BaseMetaDataset

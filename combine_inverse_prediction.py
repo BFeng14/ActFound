@@ -31,12 +31,12 @@ def get_metric(y_true, y_pred, y_train_mean):
 
     return rmse, r2, R2os
 
-root_path = "./result_ood_tmp/"
+root_path = "./test_results/result_ood_tmp"
 model_name_list = ["meta_delta", "transfer_delta"]
 for model_name in model_name_list:
     path_normal = f"{root_path}/normal/{model_name}"
     path_inverse = f"{root_path}/inverse/{model_name}"
-    path_fusion = f"./result_ood/{model_name}"
+    path_fusion = f"./test_results/result_ood/{model_name}"
     if not os.path.exists(path_fusion):
         os.mkdir(path_fusion)
     result_normal = json.load(open(f"{path_normal}/sup_num_16.json", "r"))
