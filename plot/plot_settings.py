@@ -106,9 +106,9 @@ def get_model_colors(mod=None):
     colors = {m: c for c, m in zip(colors_list, model_list)}
     colors['Meta-DDG'] = colors['actfound_fusion']
     colors['ProtoNet'] = colors['DKT']
-    colors['no-pretraining'] = colors['transfer_qsar']
-    colors['ChEMBL-pretrain'] = colors['actfound_fusion']
-    colors['BDB-pretrain'] = colors['protonet']
+    colors['on_none'] = colors['transfer_qsar']
+    colors['on_chembl'] = colors['actfound_fusion']
+    colors['on_bdb'] = colors['protonet']
     colors['FEP+'] = '#b2182b'
 
     return colors[mod]

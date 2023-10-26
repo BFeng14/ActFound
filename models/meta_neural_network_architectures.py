@@ -535,8 +535,8 @@ class FCNReLUNormNetworkQSAR(nn.Module):
         self.layer_dict['linear'] = MetaLinearLayer(input_dim=self.hidden_dim, hidden_dim=1, use_bias=False)
         out = self.layer_dict['linear'](out)
         if self.args.input_celline:
-            self.layer_dict['linear_cell_1'] = MetaLinearLayer(input_dim=199, hidden_dim=self.hidden_dim, use_bias=False)
-            # self.layer_dict['linear_cell_2'] = MetaLinearLayer(input_dim=256, hidden_dim=self.hidden_dim, use_bias=False)
+            self.layer_dict['linear_cell_1'] = MetaLinearLayer(input_dim=425, hidden_dim=64, use_bias=False)
+            self.layer_dict['linear_cell_2'] = MetaLinearLayer(input_dim=64, hidden_dim=self.hidden_dim, use_bias=False)
         print("FCNNetwork build", out.shape)
 
     def forward(self, x, num_step, mixup=False, lam=None, params=None, training=False, backup_running_statistics=False, cellparam=None):

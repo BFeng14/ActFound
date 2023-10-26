@@ -156,8 +156,9 @@ class ActFoundRegressor(RegressorBase):
         support_features_flat = out_embed[sup_idx]
         query_features_flat = out_embed[tgt_idx]
 
-        ddg_sup_std = sup_y.unsqueeze(-1) - sup_y.unsqueeze(0)
-        # rescale = 1.0
+        # Rescale the predicted pairwise bioactivity during inference,
+        # to make it closer to the distrubution of real bioactivity.
+        # Doing this in the training phase will harm the model preformance.
         if self.is_training_phase:
             rescale = 1.0
         else:

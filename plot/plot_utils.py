@@ -112,15 +112,17 @@ def bar_plot(ax, data, data_labels, xlabel, ylabel, xscale='linear', yscale='lin
 
 def bar_ploth(ax, data, data_labels, xlabel, ylabel, xscale='linear', yscale='linear',
              min_val=0, invert_axes=False, color='tab:blue', errs=None, edge_color=None,
-             rotangle=0, anchor='center'):
+             rotangle=0, anchor='center', tickloc_top=False):
 
     ax.barh(y=range(len(data)), width=[d - min_val for d in data], left=min_val, color=color, xerr=errs,
                ecolor='k')
-    ax.set_xlabel(ylabel, size=15)
-    ax.set_ylabel(xlabel, size=15)
+    ax.set_xlabel(ylabel, size=16)
+    ax.set_ylabel(xlabel, size=16)
     ax.set_xscale(yscale)
     ax.set_yscale(xscale)
     plt.yticks([])
+    ax.tick_params(top=tickloc_top, bottom=not tickloc_top,
+                   labeltop=tickloc_top, labelbottom=not tickloc_top, labelsize=16)
     # ax.set_yticklabels(["" for _ in data], rotation=rotangle, ha=anchor)
 
 

@@ -2,16 +2,8 @@ import json
 import math
 import os
 import numpy as np
-from torch.utils.data import Dataset, sampler, DataLoader
 import tqdm
-import concurrent.futures
-import pickle
-import torch
 import dataset.load_dataset as preprocess
-import copy
-from rdkit import Chem
-from rdkit.Chem import AllChem, rdMolDescriptors, rdFingerprintGenerator
-from rdkit import DataStructs
 from multiprocessing import Pool
 from dataset.data_base import preprocess_assay, BaseMetaDataset
 

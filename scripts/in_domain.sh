@@ -18,7 +18,7 @@ python main_reg.py --datasource=bdb --logdir ${BDB_DIR}/checkpoint_bdb_maml --mo
 python main_reg.py --datasource=bdb --logdir ${BDB_DIR}/checkpoint_bdb_protonet --model_name protonet --test_write_file ${BDB_RES} ${FIXED_PARAM} &
 python main_reg.py --datasource=bdb --logdir ${BDB_DIR}/checkpoint_bdb_transfer_qsar --model_name transfer_qsar --test_write_file ${BDB_RES} ${FIXED_PARAM} &
 
-FIXED_PARAM_PQSAR="--test_repeat_num 1 --train 0 --test_epoch -1"
+FIXED_PARAM_PQSAR="--test_sup_num 0.75 --test_repeat_num 1 --train 0 --test_epoch -1"
 PQSAR_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/pqsar/feat.npy --train_assay_idxes ./train_assay_feat/pqsar/index.pkl"
 PQSAR_DIR="./checkpoints_all/checkpoints_pqsar"
 PQSAR_RES="./test_results/result_indomain/pqsar"

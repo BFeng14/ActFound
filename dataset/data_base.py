@@ -8,7 +8,6 @@ import random
 from rdkit import Chem
 from rdkit.Chem import rdFingerprintGenerator
 from rdkit import DataStructs
-import hashlib
 
 
 def preprocess_assay(in_data):

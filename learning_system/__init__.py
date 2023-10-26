@@ -5,7 +5,10 @@ from learning_system.system_actfound_transfer import ActFoundTransferRegressor
 from learning_system.system_transfer_qsar import TransferQSARRegressor
 from learning_system.system_meta_qsar import MAMLRegressor
 
-def system_selector(model_name):
+def system_selector(args):
+    model_name = args.model_name
+    if args.datasource == "gdsc":
+        return GDSCRegressor
     if model_name == "actfound":
         return ActFoundRegressor
     elif model_name == "protonet":

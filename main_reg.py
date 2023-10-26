@@ -29,7 +29,7 @@ def get_args():
     parser.add_argument('--first_order_to_second_order_epoch', default=10, type=int, help='first_order_to_second_order_epoch')
 
     parser.add_argument('--transfer_lr', default=0.004, type=float,  help='transfer_lr')
-    parser.add_argument('--test_sup_num', default="16", type=str)
+    parser.add_argument('--test_sup_num', default="0", type=str)
     parser.add_argument('--test_repeat_num', default=10, type=int)
 
     parser.add_argument('--test_write_file', default="./test_result_debug/", type=str)
@@ -64,8 +64,9 @@ def get_args():
     parser.add_argument('--new_ddg', default=False, action='store_true')
 
     parser.add_argument('--input_celline', default=False, action='store_true')
-    parser.add_argument('--cell_line_feat', default='./scripts/gdsc/cellline_to_feat_pca.pkl')
+    parser.add_argument('--cell_line_feat', default='./datas/gdsc/cellline_to_feat.pkl')
     parser.add_argument('--cross_test', default=False, action='store_true')
+    parser.add_argument('--gdsc_pretrain_data', default="none", type=str)
     parser.add_argument('--use_byhand_lr', default=False, action='store_true')
 
     parser.add_argument('--inverse_ylabel', default=False, action='store_true')
@@ -87,7 +88,10 @@ def train(args, model, dataloader):
     begin_epoch = 0
     if args.resume == 1:
         begin_epoch = args.test_epoch + 1
-    _, last_test_result = test(args, begin_epoch, model, dataloader, is_test=False)
+    if args.datasource == "gdsc":
+        _, last_test_result = test(args, begin_epoch, model, dataloader, is_test=True)
+    else:
+        _, last_test_result = test(args, begin_epoch, model, dataloader, is_test=False)
 
     beat_epoch = -1
     print_loss = 0.0
@@ -108,14 +112,15 @@ def train(args, model, dataloader):
         if args.datasource == "gdsc":
             if not (epoch-begin_epoch+1) % 5 == 0:
                 continue
-            res_dict, test_result = test(args, epoch, model, dataloader, is_test=False)
+            res_dict, test_result = test(args, epoch, model, dataloader, is_test=True)
             # torch.save(model.state_dict(), './scripts/gdsc/checkpoints/model_{}'.format(epoch))
             if last_test_result < test_result:
                 last_test_result = test_result
-                write_dir = os.path.join(args.test_write_file, args.model_name)
+                write_dir = os.path.join(args.test_write_file, "on_"+args.gdsc_pretrain_data)
                 if not os.path.exists(write_dir):
                     os.system(f"mkdir -p {write_dir}")
                 json.dump(res_dict, open(os.path.join(write_dir, f"sup_num_{args.test_sup_num}.json"), "w"))
+                print(f"saving best result into {write_dir}")
         else:
             _, test_result = test(args, epoch, model, dataloader, is_test=False)
             torch.save(model.state_dict(), '{0}/{2}/model_{1}'.format(args.logdir, epoch, exp_string))
@@ -198,12 +203,14 @@ def prepare_assay_feat(args, model, dataloader):
 
 
 def main():
-    model = system_selector(args.model_name)(args=args, input_shape=(2, args.dim_w))
+    model = system_selector(args)(args=args, input_shape=(2, args.dim_w))
     dataloader = dataset_constructor(args)
 
     if args.train == 1:
         if args.resume == 1:
             model_file = '{0}/{2}/model_{1}'.format(args.logdir, args.test_epoch, exp_string)
+            if not os.path.exists(model_file):
+                model_file = '{0}/{1}/model_best'.format(args.logdir, exp_string)
             print("resume training from", model_file)
             try:
                 model.load_state_dict(torch.load(model_file))
@@ -291,7 +298,7 @@ if __name__ == '__main__':
     np.random.seed(2)
 
     datasource = args.datasource
-    # if args.datasource == "chembl":
-    #     datasource = "drug"
+    if args.datasource == "gdsc":
+        datasource = args.gdsc_pretrain_data
     exp_string = f'data_{datasource}.mbs_{args.meta_batch_size}.metalr_0.00015.innerlr_{args.update_lr}'
     main()

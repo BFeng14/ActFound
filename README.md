@@ -18,13 +18,13 @@ All datas, model checkpoints and test results are available on the Google Drive.
 - Please make sure that "datas", "checkpoints_all"(necessary for inference), "test_results"(necessary for plot) all correctly placed in to project root.
 
 ### run model inference
-For model inference only, please download the corresponding file from the google drive, and simply run main_reg.py. The checkpoints for models trained on ChEMBL, BindingDB, FS-MOL and pQSAR-ChEMBL are avaliable on the google drive. 
+For model inference only, please download the corresponding file from the google drive, and simply run "main_reg.py". The checkpoints for models trained on ChEMBL, BindingDB, FS-MOL and pQSAR-ChEMBL are avaliable on the google drive. 
 - Note that KNN_MAML is optional for testing, and it will first take about half hour to run few-shot testing on all assays on ChEMBL(only needed once), and then take another half hour to fully run on the test set of ChEMBL. You can just close it by not setting --knn_maml. one example for runing in-domain test on ChEMBL is given below.
 - For testing following in-domain setting, please just simply replace the DATA_SCOURCE (e.g. BindingDB), and it's corresponding MODEL_DIR.
 - For testing on BindingDB using model trained on ChEMBL, please simple add --cross_test.
 - For testing on other dataset (KIBA, Davis, FEP, fep_opls4, activity) using model trained on ChEMBL, please simple add "--expert_test test_domain_name". (fep_opls4 means that using the result of FEP+(OPLS4) for fine-tuning, and activity means ChEMBL-Activity)
-- For testing using other models (including ActFound(transfer), MAML, ProtoNet, TransferQSAR), please refer to learning_system/__init__.py, and change the MODEL_NAME.
-- To get better result, please run another inference using ActFound(transfer), and fusion the result of ActFound and ActFound(transfer) using fusion_result.py. The result on our paper utilzed both KNN_MAML and fusion method.
+- For testing using other models (including ActFound(transfer), MAML, ProtoNet, TransferQSAR), please refer to "learning_system/\_\_init__.py", and change the MODEL_NAME.
+- To get better result, please run another inference using ActFound(transfer), and fusion the result of ActFound and ActFound(transfer) using "fusion_result.py". The result on our paper utilzed both KNN_MAML and fusion method.
 - For inference on other datasources, please follow the code in "dataset/load_dataset.py" (for example read_FEP_SET), and load your dataset in "dataset/data_chemblbdb_Assay_reg.py".
 ```bash
 DATA_SOURCE="chembl"
@@ -36,7 +36,7 @@ python main_reg.py --datasource=${DATA_SOURCE} --logdir ${MODEL_DIR} --model_nam
 ```
 
 ### run model training
-For ActFound training, please first make sure that the training data is correctly downloaded, and then simply run main_reg.py. Training of ActFound on ChEMBL takes nearly 3 days, training on BindingDB takes 30 hours.
+For ActFound training, please first make sure that the training data is correctly downloaded, and then simply run "main_reg.py". Training of ActFound on ChEMBL takes nearly 3 days, training on BindingDB takes 30 hours.
 - For training on other dataset, please replace DATA_SOURCE. 
 - For training on other model, please refer to "learning_system/\_\_init__.py", and change the MODEL_NAME.
 
@@ -48,7 +48,7 @@ python main_reg.py --datasource=${DATA_SOURCE} --logdir ${MODEL_DIR} --model_nam
 ```
 
 ### result on paper reproduce
-if you want to reproduce the result shown in our paper, we provide all scripts we used to run the full test in ./script.
+if you want to reproduce the result shown in our paper, we provide all scripts we used to run the full test in "./script". You can refer to the correct running script is contained in "./script" if you find are not sure about how to run inference.
 
 ## Citing
 If you use MetaLigand in your work, a citation to our paper is appreciated:

@@ -14,7 +14,7 @@ class GDSCRegressor(RegressorBase):
         self.regressor = FCNReLUNormNetworkQSAR(input_shape=self.input_shape, args=self.args, meta=True).cuda()
         self.post_init(args)
 
-    def forward(self, data_batch, epoch, num_steps, is_training_phase):
+    def forward(self, data_batch, epoch, num_steps, is_training_phase, **kwargs):
         xs, ys, splits, assay_idxes, assay_weight, _ = data_batch
 
         total_losses = []
@@ -48,7 +48,7 @@ class GDSCRegressor(RegressorBase):
         return losses, per_task_target_preds, final_weights, per_task_metrics
 
     def net_forward(self, x, y, split, weights, backup_running_statistics, training, num_step, assay_idx=None,
-                    is_support=False):
+                    is_support=False, **kwargs):
         cellparam = torch.tensor(self.cellline_feats[assay_idx]).float().cuda()
         _, out_value = self.regressor.forward(x=x, params=weights,
                                            training=training,
