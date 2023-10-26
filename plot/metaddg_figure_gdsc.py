@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
 
 
 import os
@@ -17,10 +16,10 @@ import plot_utils
 import warnings
 warnings.filterwarnings('ignore')
 
-models = ['BDB-pretrain', 'ChEMBL-pretrain', 'no-pretrain']
+models = ['no-pretraining', 'BDB-pretrain', 'ChEMBL-pretrain']
 models_cvt = {'BDB-pretrain': 'onBDB',
               'ChEMBL-pretrain': 'onChEMBL',
-              'no-pretrain': 'random-init',}
+              'no-pretraining': 'random-init',}
 
 import os
 import json
@@ -46,13 +45,15 @@ for x in models:
     fsmol[2][x] = []
     for k in res:
         mean = 0
-        d = np.mean([float(data["R2os"]) for data in res[k]])
+        d = np.mean([float(data["rho_s"]) for data in res[k]])
         fsmol[2][x].append(d)
         mean += d
 
-# In[4]:
-ax = plot_settings.get_wider_axis(double=True)
+
+
 colors = [plot_settings.get_model_colors(mod) for mod in models]
+
+
 labels = [models_cvt.get(x, x) for x in models]
 means_all = []
 stderrs_all = []
@@ -67,25 +68,33 @@ for i in range(3):
 
 
 import matplotlib.pyplot as plt
-plt.figure(figsize=(int(plot_settings.FIG_WIDTH * 1.5), plot_settings.FIG_HEIGHT))
-ylabel_all = ["r2", "RMSE", "R2os"]
+
+ylabel_all = ["r2", "RMSE", "$\\rho_S$"]
 for i in range(3):
-    ax_i = plt.subplot(1, 3, i + 1)
+    plt.figure(figsize=(int(plot_settings.FIG_WIDTH), plot_settings.FIG_HEIGHT*0.4))
+    ax_i = plt.subplot(1, 1, 1)
     min_val = np.min(np.array(means_all[i]) - np.array(stderrs_all[i]))
-    min_val = max(min_val - 0.02, 0.)
-    plot_utils.bar_plot(
+    min_val = 0. #max(min_val - 0.01, 0.)
+
+    plot_utils.bar_ploth(
         ax_i, data=means_all[i], errs=stderrs_all[i], data_labels=labels,
-        xlabel="", ylabel=ylabel_all[i], rotangle=45, color=colors,
-        min_val=min_val)
-    plot_utils.format_ax(ax_i)
+        xlabel="", ylabel=ylabel_all[i] if ylabel_all[i] != "r2" else "r$^2$", rotangle=0, color=colors,
+        min_val=min_val, invert_axes=False)
+    if i == 0:
+        ax_i.set_xlim(0.790, 0.770)
+    elif i== 1:
+        ax_i.set_xlim(0.650, 0.620)
+    else:
+        ax_i.set_xlim(0.630, 0.600)
 
+    from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 
+    ax_i.xaxis.set_major_locator(MultipleLocator(0.01))
+    ax_i.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))  
 
-plot_utils.format_legend(ax, *ax.get_legend_handles_labels(), loc='upper right', ncols=2)
-plot_utils.put_legend_outside_plot(ax, anchorage=(1.01, 1.01))
-plt.tight_layout()
+    ax_i.spines['left'].set_visible(False)
+    ax_i.spines['top'].set_visible(False)
+    plt.tight_layout()
+    plt.savefig(f'./figs/4.f.figure_gdsc_{i}.pdf')
 
-plt.show()
-plt.savefig(f'./figs/4.f.figure_gdsc.pdf')
-plt.show()
 

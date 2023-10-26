@@ -1,17 +1,35 @@
-CUDA_VISIBLE_DEVICES=0 python main_reg.py --datasource=chembl --metatrain_iterations=50 --update_lr=0.001 --meta_lr=0.00015 --min_learning_rate 0.0001 --num_updates=5 --test_num_updates=5 --trial=1 --meta_batch_size=16  --logdir ./checkpoints_chembl_new/checkpoint_chembl_metricbased   --hid_dim 2048 --sim_thres 0.2 --dim_w 2048 --use_transfer_l &
-#CUDA_VISIBLE_DEVICES=4 python main_reg.py --datasource=chembl --metatrain_iterations=50 --update_lr=0.001 --meta_lr=0.00015 --min_learning_rate 0.0001 --num_updates=5 --test_num_updates=5 --trial=1 --meta_batch_size=16  --logdir ./checkpoints_chembl_new/checkpoint_chembl_ddg_meta      --hid_dim 2048 --sim_thres 0.2 --dim_w 2048 --new_ddg &
-CUDA_VISIBLE_DEVICES=1 python main_reg.py --datasource=chembl --metatrain_iterations=50 --update_lr=0.001 --meta_lr=0.00015 --min_learning_rate 0.0001 --num_updates=5 --test_num_updates=5 --trial=1 --meta_batch_size=16  --logdir ./checkpoints_chembl_new/checkpoint_chembl_qsar_transfer --hid_dim 2048 --sim_thres 0.2 --dim_w 2048 --qsar --use_transfer_l &
-CUDA_VISIBLE_DEVICES=3 python main_reg.py --datasource=chembl --metatrain_iterations=50 --update_lr=0.001 --meta_lr=0.00015 --min_learning_rate 0.0001 --num_updates=5 --test_num_updates=5 --trial=1 --meta_batch_size=16  --logdir ./checkpoints_chembl_new/checkpoint_chembl_ddg_transfer  --hid_dim 2048 --sim_thres 0.2 --dim_w 2048 --new_ddg --use_transfer_l &
-CUDA_VISIBLE_DEVICES=7 python main_reg.py --datasource=chembl --metatrain_iterations=50 --update_lr=0.001 --meta_lr=0.00015 --min_learning_rate 0.0001 --num_updates=5 --test_num_updates=5 --trial=1 --meta_batch_size=16  --logdir ./checkpoints_chembl_new/checkpoint_chembl_qsar_meta     --hid_dim 2048 --sim_thres 0.2 --dim_w 2048 --qsar &
+FIXED_PARAM="--test_sup_num 16 --test_repeat_num 2"
 
-CUDA_VISIBLE_DEVICES=0 python main_reg.py --datasource=bdb --metatrain_iterations=50 --update_lr=0.001 --meta_lr=0.00015 --min_learning_rate 0.0001 --num_updates=5 --test_num_updates=5 --trial=1 --meta_batch_size=16  --logdir ./checkpoints_bdb/checkpoint_bdb_metricbased   --hid_dim 2048 --sim_thres 0.2 --dim_w 2048 --use_transfer_l &
-#CUDA_VISIBLE_DEVICES=6 python main_reg.py --datasource=bdb --metatrain_iterations=50 --update_lr=0.001 --meta_lr=0.00015 --min_learning_rate 0.0001 --num_updates=5 --test_num_updates=5 --trial=1 --meta_batch_size=16  --logdir ./checkpoints_bdb/checkpoint_bdb_ddg_meta      --hid_dim 2048 --sim_thres 0.2 --dim_w 2048 --new_ddg &
-CUDA_VISIBLE_DEVICES=1 python main_reg.py --datasource=bdb --metatrain_iterations=50 --update_lr=0.001 --meta_lr=0.00015 --min_learning_rate 0.0001 --num_updates=5 --test_num_updates=5 --trial=1 --meta_batch_size=16  --logdir ./checkpoints_bdb/checkpoint_bdb_qsar_transfer --hid_dim 2048 --sim_thres 0.2 --dim_w 2048 --qsar --use_transfer_l &
-CUDA_VISIBLE_DEVICES=5 python main_reg.py --datasource=bdb --metatrain_iterations=50 --update_lr=0.001 --meta_lr=0.00015 --min_learning_rate 0.0001 --num_updates=5 --test_num_updates=5 --trial=1 --meta_batch_size=16  --logdir ./checkpoints_bdb/checkpoint_bdb_ddg_transfer  --hid_dim 2048 --sim_thres 0.2 --dim_w 2048 --new_ddg --use_transfer_l &
-CUDA_VISIBLE_DEVICES=6 python main_reg.py --datasource=bdb --metatrain_iterations=50 --update_lr=0.001 --meta_lr=0.00015 --min_learning_rate 0.0001 --num_updates=5 --test_num_updates=5 --trial=1 --meta_batch_size=16  --logdir ./checkpoints_bdb/checkpoint_bdb_qsar_meta     --hid_dim 2048 --sim_thres 0.2 --dim_w 2048 --qsar &
+CHEMBL_DIR="./checkpoints_all/checkpoints_chembl --begin_lrloss_epoch 50 --metatrain_iterations 60"
+CHEMBL_RES="./test_results/result_indomain/chembl"
+python main_reg.py --datasource=chembl --logdir ${CHEMBL_DIR}/checkpoint_chembl_actfound --model_name actfound --test_write_file ${CHEMBL_RES} ${FIXED_PARAM}
+python main_reg.py --datasource=chembl --logdir ${CHEMBL_DIR}/checkpoint_chembl_actfound_transfer --model_name actfound_transfer --test_write_file ${CHEMBL_RES} ${FIXED_PARAM}
+python main_reg.py --datasource=chembl --logdir ${CHEMBL_DIR}/checkpoint_chembl_maml --model_name maml --test_write_file ${CHEMBL_RES} ${FIXED_PARAM}
+python main_reg.py --datasource=chembl --logdir ${CHEMBL_DIR}/checkpoint_chembl_protonet --model_name protonet --test_write_file ${CHEMBL_RES} ${FIXED_PARAM}
+python main_reg.py --datasource=chembl --logdir ${CHEMBL_DIR}/checkpoint_chembl_transfer_qsar --model_name transfer_qsar --test_write_file ${CHEMBL_RES} ${FIXED_PARAM}
 
-#CUDA_VISIBLE_DEVICES=7 python main_reg.py --datasource=pqsar --metatrain_iterations=50 --update_lr=0.001 --meta_lr=0.00015 --min_learning_rate 0.0001 --num_updates=5 --test_num_updates=5 --trial=1 --meta_batch_size=16  --logdir ./checkpoints_pqsar/checkpoint_pqsar_metricbased   --hid_dim 2048 --sim_thres 0.2 --dim_w 2048 --use_transfer_l &
-#CUDA_VISIBLE_DEVICES=6 python main_reg.py --datasource=pqsar --metatrain_iterations=50 --update_lr=0.001 --meta_lr=0.00015 --min_learning_rate 0.0001 --num_updates=5 --test_num_updates=5 --trial=1 --meta_batch_size=16  --logdir ./checkpoints_pqsar/checkpoint_pqsar_ddg_meta      --hid_dim 2048 --sim_thres 0.2 --dim_w 2048 --new_ddg &
-#CUDA_VISIBLE_DEVICES=5 python main_reg.py --datasource=pqsar --metatrain_iterations=50 --update_lr=0.001 --meta_lr=0.00015 --min_learning_rate 0.0001 --num_updates=5 --test_num_updates=5 --trial=1 --meta_batch_size=16  --logdir ./checkpoints_pqsar/checkpoint_pqsar_qsar_transfer --hid_dim 2048 --sim_thres 0.2 --dim_w 2048 --qsar --use_transfer_l &
-#CUDA_VISIBLE_DEVICES=4 python main_reg.py --datasource=pqsar --metatrain_iterations=50 --update_lr=0.001 --meta_lr=0.00015 --min_learning_rate 0.0001 --num_updates=5 --test_num_updates=5 --trial=1 --meta_batch_size=16  --logdir ./checkpoints_pqsar/checkpoint_pqsar_ddg_transfer  --hid_dim 2048 --sim_thres 0.2 --dim_w 2048 --new_ddg --use_transfer_l &
-#CUDA_VISIBLE_DEVICES=1 python main_reg.py --datasource=pqsar --metatrain_iterations=50 --update_lr=0.001 --meta_lr=0.00015 --min_learning_rate 0.0001 --num_updates=5 --test_num_updates=5 --trial=1 --meta_batch_size=16  --logdir ./checkpoints_pqsar/checkpoint_pqsar_qsar_meta     --hid_dim 2048 --sim_thres 0.2 --dim_w 2048 --qsar &
+BDB_DIR="./checkpoints_all/checkpoints_bdb --begin_lrloss_epoch 50 --metatrain_iterations 60"
+BDB_RES="./test_results/result_indomain/bdb"
+python main_reg.py --datasource=bdb --logdir ${BDB_DIR}/checkpoint_bdb_actfound --model_name actfound --test_write_file ${BDB_RES} ${FIXED_PARAM}
+python main_reg.py --datasource=bdb --logdir ${BDB_DIR}/checkpoint_bdb_actfound_transfer --model_name actfound_transfer --test_write_file ${BDB_RES} ${FIXED_PARAM}
+python main_reg.py --datasource=bdb --logdir ${BDB_DIR}/checkpoint_bdb_maml --model_name maml --test_write_file ${BDB_RES} ${FIXED_PARAM}
+python main_reg.py --datasource=bdb --logdir ${BDB_DIR}/checkpoint_bdb_protonet --model_name protonet --test_write_file ${BDB_RES} ${FIXED_PARAM}
+python main_reg.py --datasource=bdb --logdir ${BDB_DIR}/checkpoint_bdb_transfer_qsar --model_name transfer_qsar --test_write_file ${BDB_RES} ${FIXED_PARAM}
+
+FIXED_PARAM_PQSAR="--test_repeat_num 1 --begin_lrloss_epoch 60 --metatrain_iterations 80"
+PQSAR_DIR="./checkpoints_all/checkpoints_pqsar"
+PQSAR_RES="./test_results/result_indomain/pqsar"
+python main_reg.py --datasource=pqsar --logdir ${PQSAR_DIR}/checkpoint_pqsar_actfound --model_name actfound --test_write_file ${PQSAR_RES} ${FIXED_PARAM_PQSAR}
+python main_reg.py --datasource=pqsar --logdir ${PQSAR_DIR}/checkpoint_pqsar_actfound_transfer --model_name actfound_transfer --test_write_file ${PQSAR_RES} ${FIXED_PARAM_PQSAR}
+python main_reg.py --datasource=pqsar --logdir ${PQSAR_DIR}/checkpoint_pqsar_maml --model_name maml --test_write_file ${PQSAR_RES} ${FIXED_PARAM_PQSAR}
+python main_reg.py --datasource=pqsar --logdir ${PQSAR_DIR}/checkpoint_pqsar_protonet --model_name protonet --test_write_file ${PQSAR_RES} ${FIXED_PARAM_PQSAR}
+python main_reg.py --datasource=pqsar --logdir ${PQSAR_DIR}/checkpoint_pqsar_transfer_qsar --model_name transfer_qsar --test_write_file ${PQSAR_RES} ${FIXED_PARAM_PQSAR}
+
+FIXED_PARAM_FSMOL="--test_sup_num 16 --test_repeat_num 10 --begin_lrloss_epoch 60 --metatrain_iterations 80"
+FSMOL_DIR="./checkpoints_all/checkpoints_fsmol"
+FSMOL_RES="./test_results/result_indomain/fsmol"
+python main_reg.py --datasource=kiba --logdir ${FSMOL_DIR}/checkpoint_fsmol_actfound --model_name actfound --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL}
+python main_reg.py --datasource=kiba --logdir ${FSMOL_DIR}/checkpoint_fsmol_actfound_transfer --model_name actfound_transfer --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL}
+python main_reg.py --datasource=kiba --logdir ${FSMOL_DIR}/checkpoint_fsmol_maml --model_name maml --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL}
+python main_reg.py --datasource=kiba --logdir ${FSMOL_DIR}/checkpoint_fsmol_protonet --model_name protonet --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL}
+python main_reg.py --datasource=kiba --logdir ${FSMOL_DIR}/checkpoint_fsmol_transfer_qsar --model_name transfer_qsar --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL}

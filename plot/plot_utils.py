@@ -110,6 +110,19 @@ def bar_plot(ax, data, data_labels, xlabel, ylabel, xscale='linear', yscale='lin
     ax.set_xticks(range(len(data_labels)))
     ax.set_xticklabels(data_labels, rotation=rotangle, ha=anchor)
 
+def bar_ploth(ax, data, data_labels, xlabel, ylabel, xscale='linear', yscale='linear',
+             min_val=0, invert_axes=False, color='tab:blue', errs=None, edge_color=None,
+             rotangle=0, anchor='center'):
+
+    ax.barh(y=range(len(data)), width=[d - min_val for d in data], left=min_val, color=color, xerr=errs,
+               ecolor='k')
+    ax.set_xlabel(ylabel, size=15)
+    ax.set_ylabel(xlabel, size=15)
+    ax.set_xscale(yscale)
+    ax.set_yscale(xscale)
+    plt.yticks([])
+    # ax.set_yticklabels(["" for _ in data], rotation=rotangle, ha=anchor)
+
 
 def horizontal_bar_plot(ax, data, data_labels, xlabel, ylabel, xscale='linear', yscale='linear',
                         min_val=0, invert_axes=False, color='tab:blue', edge_color=None):
@@ -152,19 +165,21 @@ def grouped_barplot(ax, nested_data, data_labels, xlabel, ylabel, xscale='linear
                height=[heights[i] for i in range(it, len(heights), len(nested_data[0]))],
                bottom=[bottoms[i] for i in range(it, len(heights), len(nested_data[0]))],
                color=[colors[i] for i in range(it, len(colors), len(nested_data[0]))],
-               width=scale * 0.9 / len(nested_data[0]), label=labels[it] if color_legend is not None else '',
+               width=scale * 0.9 / len(nested_data[0]), label=labels[it] if color_legend is not None else None,
                align='edge', ecolor='k',
                yerr=None if nested_errs is None else [errs[i] for i in range(it, len(errs), len(nested_data[0]))])
     if invert_axes:
         ax.invert_yaxis()
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
+    ax.set_xlabel(xlabel, size=16)
+    ax.set_ylabel(ylabel, size=16)
     ax.set_xscale(xscale)
     ax.set_yscale(yscale)
+    # ax.spines['left'].set_linewidth(1.5)
+    # ax.spines['bottom'].set_linewidth(1.5)
     ax.set_xticks([scale * i for i in range(len(data_labels))])
-    ax.set_xticklabels(data_labels)
+    ax.set_xticklabels(data_labels, size=16)
     ax.tick_params(top=tickloc_top, bottom=not tickloc_top,
-                   labeltop=tickloc_top, labelbottom=not tickloc_top)
+                   labeltop=tickloc_top, labelbottom=not tickloc_top, labelsize=16)
     # Rotate the tick labels and set their alignment.
     plt.setp(ax.get_xticklabels(), rotation=rotangle, ha=anchorpoint,
              rotation_mode="anchor")

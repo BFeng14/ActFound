@@ -23,9 +23,11 @@ FIG_HEIGHT = 4
 FIG_WIDTH = 4
 plt.style.use('default')
 
-MODELS = ['KNN', 'RF', 'GPST', 'transfer_delta', 'transfer_qsar',
-          'ADKF-IFT', 'protonet', 'CNP', 'ProtoNet', 'maml', 'Meta-DDG']
-
+models_cvt = {'actfound_fusion': 'ActFound',
+              'maml': 'MAML',
+              'actfound_transfer': 'ActFound (transfer)',
+              'transfer_qsar': 'TransferQSAR',
+              'protonet': 'ProtoNet'}
 
 def get_square_axis():
     plt.figure(figsize=(FIG_WIDTH, FIG_HEIGHT))
@@ -46,7 +48,7 @@ def get_double_square_axis():
 
 
 def get_model_ordering(actual_models):
-    desired_ordering = ['Meta-DDG', 'KNN', 'RF', 'GPST', 'transfer_delta', 'transfer_qsar',
+    desired_ordering = ['Meta-DDG', 'KNN', 'RF', 'GPST', 'actfound_transfer', 'transfer_qsar',
                         'ADKF-IFT', 'protonet', 'CNP', 'ProtoNet', 'maml']
     return sorted(actual_models, key=lambda m: desired_ordering.index(m))
 
@@ -66,7 +68,7 @@ def get_model_colors2(mod):
         'KNN': '#543005',
         'RF': '#8c510a',
         'GPST': '#bf812d',
-        'transfer_delta': '#dfc27d',
+        'actfound_transfer': '#dfc27d',
         'transfer_qsar': '#f6e8c3',
         'ADKF-IFT': '#003c30',
         'protonet': '#01665e',
@@ -84,7 +86,7 @@ def get_model_colors(mod=None):
     #     'KNN': '#543005',
     #     'RF': '#8c510a',
     #     'GPST': '#bf812d',
-    #     'transfer_delta': '#dfc27d',
+    #     'actfound_transfer': '#dfc27d',
     #     'transfer_qsar': '#f6e8c3',
     #     'ADKF-IFT': '#003c30',
     #     'protonet': '#01665e',
@@ -92,21 +94,22 @@ def get_model_colors(mod=None):
     #     'DKT': '#80cdc1',
     #     'maml': '#c7eae5',  # New color
     #     'ADKT-IFT': '#d8f0ed',
-    #     'meta_delta_fusion': '#c8dfb6',  # New color
+    #     'actfound': '#c8dfb6',  # New color
     #     'BDB-pretrain': '#c8dfb6',
     #     'ChEMBL-pretrain': '#01665e',
     #     'no-pretrain': '#dfc27d',
     #     'Meta-DDG': '#c8dfb6',
     #     'ProtoNet': '#80cdc1'
     # }
-    model_list = ['meta_delta_fusion', 'transfer_delta', 'ADKT-IFT', 'maml', 'protonet', 'DKT', 'CNP', 'transfer_qsar', 'RF', 'GPST', 'KNN']
+    model_list = ['actfound_fusion', 'actfound_transfer', 'ADKT-IFT', 'maml', 'protonet', 'DKT', 'CNP', 'transfer_qsar', 'RF', 'GPST', 'KNN']
     colors_list = ['#c8dfb6', '#d8f0ed', '#c7eae5', '#80cdc1', '#35978f', '#01665e', '#543005', '#8c510a', '#bf812d', '#dfc27d', '#f6e8c3']
     colors = {m: c for c, m in zip(colors_list, model_list)}
-    colors['Meta-DDG'] = colors['meta_delta_fusion']
+    colors['Meta-DDG'] = colors['actfound_fusion']
     colors['ProtoNet'] = colors['DKT']
-    colors['no-pretrain'] = colors['transfer_delta']
-    colors['ChEMBL-pretrain'] = colors['protonet']
-    colors['BDB-pretrain'] = colors['meta_delta_fusion']
+    colors['no-pretraining'] = colors['transfer_qsar']
+    colors['ChEMBL-pretrain'] = colors['actfound_fusion']
+    colors['BDB-pretrain'] = colors['protonet']
+    colors['FEP+'] = '#b2182b'
 
     return colors[mod]
 
