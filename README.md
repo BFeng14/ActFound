@@ -50,7 +50,9 @@ python main_reg.py --datasource=${DATA_SOURCE} --logdir ${MODEL_DIR} --model_nam
 ```
 
 ### result on paper reproduce
-if you want to reproduce the result shown in our paper, we provide all scripts we used to run the full test in "./script". You can refer to the correct running script is contained in "./script" if you find are not sure about how to run inference. Please feel free to contact me by email if there is any problem in the code or paper: fengbin14@pku.edu.cn.
+We provide all test results on the file test_results_all.tar.gz, which can be used to plot all figures shown in our paper.
+
+If you want to reproduce the result shown in our paper, we provide all scripts we used to run the full test in "./script". You can refer to the correct running script is contained in "./script" if you find are not sure about how to run inference. Please feel free to contact me by email if there is any problem in the code or paper: fengbin14@pku.edu.cn.
 
 ## Citing
 If you use MetaLigand in your work, a citation to our paper is appreciated:
