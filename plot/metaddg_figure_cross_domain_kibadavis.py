@@ -21,7 +21,10 @@ metric_name = sys.argv[1]
 domain_name = sys.argv[2]
 shot = 16
 
-datasets = [f"ChE to {domain_name}", f"BDB to {domain_name}"]
+if domain_name == "Davis":
+    datasets = [f"ChE to Dav", f"BDB to Dav"]
+else:
+    datasets = [f"ChE to {domain_name}", f"BDB to {domain_name}"]
 models = ['actfound_fusion', 'actfound_transfer', 'maml', 'protonet', 'DKT', 'CNP', 'transfer_qsar']
 models_cvt = plot_settings.models_cvt
 

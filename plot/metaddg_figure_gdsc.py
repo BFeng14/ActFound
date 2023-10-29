@@ -26,7 +26,7 @@ import scipy
 fsmol = [{}, {}, {}]
 for x in models:
     dir = x
-    with open(os.path.join("/home/fengbin/meta_delta_master/test_results/gdsc",  dir, "sup_num_0.json"), "r") as f:
+    with open(os.path.join("../test_results/gdsc",  dir, "sup_num_0.json"), "r") as f:
         res = json.load(f)
     fsmol[0][x] = []
     for k in res:

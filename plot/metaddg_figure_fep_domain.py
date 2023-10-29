@@ -79,30 +79,30 @@ min_val = np.min(np.array(means_all) - np.array(stderrs_all))
 max_val = np.max(np.array(means_all) + np.array(stderrs_all))
 min_val = 0. #max(min_val-(max_val-min_val)*0.15, 0.)
 
-plot_legend = False
+plot_legend = True
 ylabel = metric_name
 if metric_name == "rmse":
     ylabel = "RMSE(pK)"
-ax = plot_settings.get_wider_axis(double=True)
+if plot_legend:
+    plt.figure(figsize=(int(plot_settings.FIG_WIDTH * 2.5), plot_settings.FIG_HEIGHT))
+    ax = plt.subplot(1, 1, 1)
+else:
+    ax = plot_settings.get_wider_axis(double=True)
 plot_utils.grouped_barplot(
     ax, means_all,
     datasets,
-    xlabel='Percentage of fine-tune data', ylabel=ylabel if ylabel != "r2" else "r$^2$", color_legend=None,
+    xlabel='Percentage of the fine-tuning data', ylabel=ylabel if ylabel != "r2" else "r$^2$", color_legend=labels if plot_legend else None,
     nested_color=colors, nested_errs=stderrs_all, tickloc_top=False, rotangle=0, anchorpoint='center',
     legend_loc='upper left',
     min_val=min_val, scale=2)
 
 plot_utils.format_ax(ax)
 if plot_legend:
-
-    handles, labels = ax.get_legend_handles_labels()
-    plt.legend(handles, labels, loc='upper right', scatterpoints=1, ncol=1, bbox_to_anchor=(1.35, 1.01),
-               markerscale=20)
-    # plot_utils.format_legend(ax, *ax.get_legend_handles_labels(), loc='upper right', ncols=4)
-    plot_utils.put_legend_outside_plot(ax, anchorage=(1.01, 1.01))
-    plt.tight_layout()
-else:
-    plt.tight_layout()
+    # handles, labels = ax.get_legend_handles_labels()
+    # plt.legend(handles, labels, loc='upper right', scatterpoints=1, ncol=1, bbox_to_anchor=(1.35, 1.01),
+    #            markerscale=20)
+    plot_utils.format_legend(ax, *ax.get_legend_handles_labels(), loc='center right', ncols=4)
+    plot_utils.put_legend_outside_plot(ax, anchorage=(1.01, 0.5))
 
 if metric_name == "r2":
     plt.axhline(y=0.569, color='#b2182b', linestyle='--', lw=1)
@@ -110,21 +110,40 @@ elif metric_name == "rmse":
     plt.axhline(y=0.591, color='#b2182b', linestyle='--', lw=1)
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 
-if metric_name == "r2":
-    if domain_name == "fep":
-        ax.set_yticks([0.15+0.1*x for x in range(6+1)])  
-        ax.set_ylim(0.15, 0.75)
-    elif domain_name == "fep_opls4":
-        ax.set_yticks([0.15+0.1*x for x in range(5+1)])  
-        ax.set_ylim(0.15, 0.65)
-elif metric_name == "rmse":
-    ax.yaxis.set_major_locator(MultipleLocator(0.1))
-    if domain_name == "fep_opls4":
+if dataset_name=="chembl":
+    if metric_name == "r2":
+        if domain_name == "fep":
+            ax.set_yticks([0.15 + 0.1 * x for x in range(6 + 1)])
+            ax.set_ylim(0.15, 0.75)
+        elif domain_name == "fep_opls4":
+            ax.set_yticks([0.15 + 0.1 * x for x in range(5 + 1)])
+            ax.set_ylim(0.15, 0.65)
+    elif metric_name == "rmse":
+        ax.yaxis.set_major_locator(MultipleLocator(0.1))
         ax.set_ylim(0.40, 1.0)
-    elif domain_name == "fep":
-        ax.set_ylim(0.40, 1.0)
+else:
+    if metric_name == "r2":
+        if domain_name == "fep":
+            ax.set_yticks([0.15+0.1*x for x in range(6+1)])
+            ax.set_ylim(0.15, 0.75)
+        elif domain_name == "fep_opls4":
+            ax.set_yticks([0.15+0.1*x for x in range(5+1)])
+            ax.set_ylim(0.15, 0.65)
+    elif metric_name == "rmse":
+        if domain_name == "fep_opls4":
+            ax.yaxis.set_major_locator(MultipleLocator(0.10))
+            # plt.yticks([0.35, 0.50, 0.65, 0.80, 1.0])
+            ax.set_ylim(0.40, 1.0)
+        elif domain_name == "fep":
+            ax.yaxis.set_major_locator(MultipleLocator(0.2))
+            # plt.yticks([0.25, 0.40, 0.55, 0.70, 0.85, 1.00])
+            ax.set_ylim(0.20, 1.00)
 
-ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))  
+ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+plt.tight_layout()
+# plot_utils.format_legend(ax, *ax.get_legend_handles_labels(), loc='upper right', ncols=1)
+# plt.legend(loc='upper right')
+# plot_utils.put_legend_outside_plot(ax, anchorage=(1.01, 1.01))
 
 
 if dataset_name == "bdb":

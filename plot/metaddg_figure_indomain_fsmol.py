@@ -13,7 +13,7 @@ import json
 sys.path.append(os.path.join(sys.path[0], '../'))
 warnings.filterwarnings('ignore')
 
-datasets = ["FS-MOL 16-shot", "FS-MOL 32-shot", "FS-MOL 64-shot", "FS-MOL 128-shot"]
+datasets = ["16-shot", "32-shot", "64-shot", "128-shot"]
 models = ['actfound_fusion', 'actfound_transfer', 'ADKT-IFT', 'maml', 'protonet', 'DKT', 'CNP', 'transfer_qsar', 'RF', 'GPST', 'KNN']
 models_cvt = plot_settings.models_cvt
 
@@ -91,7 +91,7 @@ if metric_name == "rmse":
 # ax = plot_settings.get_wider_axis(double=True)
 plt.figure(figsize=(int(plot_settings.FIG_WIDTH * 2.5), plot_settings.FIG_HEIGHT))
 ax = plt.subplot(1, 1, 1)
-plot_legend = False
+plot_legend = True
 plot_utils.grouped_barplot(
     ax, means_all,
     datasets,
@@ -108,15 +108,15 @@ elif ylabel == "RMSE":
     ax.yaxis.set_major_locator(MultipleLocator(0.05))  
     ax.set_ylim(0.40, 0.65)
 elif ylabel == "R2os":
-    ax.yaxis.set_major_locator(MultipleLocator(0.05))  
-    ax.set_ylim(0.00, 0.45)
+    ax.yaxis.set_major_locator(MultipleLocator(0.10))
+    ax.set_ylim(0.00, 0.50)
     
 ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))  
 plot_utils.format_ax(ax)
 if plot_legend:
-    plot_utils.format_legend(ax, *ax.get_legend_handles_labels(), loc='upper right',
-                             ncols=4)
-    plot_utils.put_legend_outside_plot(ax, anchorage=(1.01, 1.01))
+    plot_utils.format_legend(ax, *ax.get_legend_handles_labels(), loc='upper right', ncols=4)
+    plot_utils.put_legend_outside_plot(ax, anchorage=(1.01, 1.01), prop={'size': 12})
+plt.title("FS-MOL", size=16+2)
 plt.tight_layout()
 
 plt.show()
@@ -126,3 +126,4 @@ elif ylabel == "RMSE":
     plt.savefig(f'./figs/supplement.1.figure_fsmol_indomain_{ylabel}.pdf')
 elif ylabel == "R2os":
     plt.savefig(f'./figs/supplement.2.figure_fsmol_indomain_{ylabel}.pdf')
+print("finish")

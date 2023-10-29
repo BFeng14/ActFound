@@ -11,7 +11,9 @@ Compound bioactivity plays an important role in drug development and discovery. 
 
 ### download data
 All datas, model checkpoints and test results are available on the Google Drive.
-- Download Link: https://drive.google.com/drive/folders/1x-F_hbQr_pXFEA5qLCkd7dIr9a_1L3aJ?usp=drive_link
+- Download Link
+    - Google Drive: https://drive.google.com/drive/folders/1x-F_hbQr_pXFEA5qLCkd7dIr9a_1L3aJ?usp=drive_link
+    - Figshare: https://figshare.com/articles/dataset/ActFound_data/24452680
 - Please first download all files necessary, and unzip them all. Please put "datas" dir under the project root, so that the code can find it during running.
 - For model inference, please download checkpoints_all.tar.gz, extract all files and put them the project root.
 - For plot figure in our paper, please download test_results_all.tar.gz, extract all files, put them the project root, and rename the dir into test_results.

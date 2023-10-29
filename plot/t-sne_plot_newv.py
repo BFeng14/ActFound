@@ -118,11 +118,11 @@ if plot_legend:
     plt.savefig('./figs/2.h.t-sne-legend.pdf')
 else:
     if "maml" in dir:
-        plt.xlabel("MAML", size=16, labelpad=10)
+        plt.title("MAML", size=16)
         plt.tight_layout()
         plt.savefig('./figs/2.h2.t-sne-maml-onchembl.pdf')
     else:
-        plt.xlabel("ActFound", size=16, labelpad=10)
+        plt.title("ActFound", size=16)
         plt.tight_layout()
         plt.savefig('./figs/2.h1.t-sne-ours-onchembl.pdf')
 plt.show()

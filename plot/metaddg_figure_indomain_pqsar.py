@@ -73,10 +73,12 @@ plot_utils.grouped_barplot(
 
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 if ylabel == "r2":
-    ax.yaxis.set_major_locator(MultipleLocator(0.05))  
-    ax.set_ylim(0.15, 0.50)
+    # ax.yaxis.set_major_locator(MultipleLocator(0.05))
+    plt.yticks([0.15, 0.25, 0.35, 0.45, 0.55])
+    ax.set_ylim(0.15, 0.55)
 elif ylabel == "RMSE":
-    ax.yaxis.set_major_locator(MultipleLocator(0.05))  
+    # ax.yaxis.set_major_locator(MultipleLocator(0.05))
+    plt.yticks([0.65, 0.75, 0.85, 0.95, 1.05])
     ax.set_ylim(0.65, 1.05)
 ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))  
 plot_utils.format_ax(ax)

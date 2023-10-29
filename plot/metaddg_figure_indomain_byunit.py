@@ -18,7 +18,7 @@ models_cvt = plot_settings.models_cvt
 
 metric_name = "r2"
 models = ['actfound_fusion', 'actfound_transfer', 'maml', 'protonet', 'DKT', 'CNP', 'transfer_qsar', 'RF', 'GPST', 'KNN']
-assay_info_dict = json.load(open("/home/fengbin/meta_delta/assay_infos.json", "r"))
+assay_info_dict = json.load(open("../datas/assay_infos_chembl.json", "r"))
 
 def is_does(unit):
     return unit in ['mg.kg-1', 'mg kg-1',
@@ -38,12 +38,12 @@ for x in models:
     for k in res:
         mean = 0
         d = np.mean([float(data[metric_name]) for data in res[k]])
-        unit_type = "molar concentration units"
+        unit_type = "molar"
         unit = assay_info_dict[k]["unit"]
         if is_does(unit):
-            unit_type = "dosage unit"
+            unit_type = "dosage"
         elif is_mass(unit):
-            unit_type = "density unit"
+            unit_type = "density"
 
         if unit_type not in result_dict:
             result_dict[unit_type] = {}
@@ -73,6 +73,11 @@ for unit in unit_keys:
 
 datasets = unit_keys
 
+# import scipy
+# from scipy import stats
+# t_test = stats.ttest_rel(result_dict['density']['actfound_fusion'], result_dict['density']['maml'], alternative="greater")[1]
+# print(t_test)
+
 ylabel = metric_name
 if metric_name == "rmse":
     ylabel = "RMSE"
@@ -90,17 +95,18 @@ plot_utils.grouped_barplot(
 
 from matplotlib.ticker import MultipleLocator, FormatStrFormatter
 if ylabel == "r2":
-    ax.yaxis.set_major_locator(MultipleLocator(0.05))  
+    # ax.yaxis.set_major_locator(MultipleLocator(0.05))
+    plt.yticks([0.15,0.25,0.35,0.45,0.55])
     ax.set_ylim(0.15, 0.55)
 elif ylabel == "RMSE":
     ax.yaxis.set_major_locator(MultipleLocator(0.05))  
     ax.set_ylim(0.45, 0.70)
 ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))  
 plot_utils.format_ax(ax)
+plt.title("Assay unit", size=18)
 if plot_legend:
-    plot_utils.format_legend(ax, *ax.get_legend_handles_labels(), loc='upper right',
-                                ncols=2)
-    plot_utils.put_legend_outside_plot(ax, anchorage=(1.01, 1.01))
+    plot_utils.format_legend(ax, *ax.get_legend_handles_labels(), loc='upper right', ncols=2)
+    plot_utils.put_legend_outside_plot(ax, anchorage=(1.01, 1.01), prop={'size': 12})
 plt.tight_layout()
 
 

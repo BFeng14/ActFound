@@ -29,7 +29,7 @@ metric_name = "r2"
 
 kiba = [{}, {}, {}, {}]
 for x in models:
-    if not os.path.exists(os.path.join("../test_results/result_indomain/kiba", x)):
+    if not os.path.exists(os.path.join(f"../test_results/result_cross/{train_data}2kiba", x)):
         continue
     with open(os.path.join(f"../test_results/result_cross/{train_data}2kiba", x, "sup_num_16.json"), "r") as f:
         try:
@@ -104,7 +104,7 @@ plot_legend = True
 plot_utils.grouped_barplot(
     ax, means_all,
     datasets,
-    xlabel=f'Number of fine-tune data on {test_name} test', ylabel=ylabel if ylabel != "r2" else "r$^2$", color_legend=labels if plot_legend else None,
+    xlabel=f'Number of the fine-tuning data', ylabel=ylabel if ylabel != "r2" else "r$^2$", color_legend=labels if plot_legend else None,
     nested_color=colors, nested_errs=stderrs_all, tickloc_top=False, rotangle=0, anchorpoint='center',
     legend_loc='upper left',
     min_val=min_val, scale=2)
@@ -119,7 +119,8 @@ plot_utils.format_ax(ax)
 if plot_legend:
     plot_utils.format_legend(ax, *ax.get_legend_handles_labels(), loc='upper right',
                              ncols=4)
-    plot_utils.put_legend_outside_plot(ax, anchorage=(1.01, 1.01))
+    plot_utils.put_legend_outside_plot(ax, anchorage=(1.01, 1.01), prop={'size': 12})
+plt.title(test_name, size=18)
 plt.tight_layout()
 
 plt.show()

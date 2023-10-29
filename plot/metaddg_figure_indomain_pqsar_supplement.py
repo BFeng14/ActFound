@@ -25,7 +25,7 @@ metric_name = "r2"
 
 fsmol = [{}]
 for x in models:
-    if not os.path.exists(os.path.join("../test_results/result_indomain/kiba", x)):
+    if not os.path.exists(os.path.join("../test_results/result_indomain/pqsar", x)):
         continue
     with open(os.path.join("../test_results/result_indomain/pqsar", x, "sup_num_16.json"), "r") as f:
         res = json.load(f)
@@ -35,8 +35,6 @@ for x in models:
         d = np.mean([float(data[metric_name]) for data in res[k]])
         fsmol[0][x].append(d)
         mean += d
-
-
 
 # ax = plot_settings.get_wider_axis(double=True)
 colors = [plot_settings.get_model_colors(mod) for mod in models]
@@ -87,7 +85,7 @@ ax.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
 plot_utils.format_ax(ax)
 if plot_legend:
     plot_utils.format_legend(ax, *ax.get_legend_handles_labels(), loc='upper right', ncols=4)
-    plot_utils.put_legend_outside_plot(ax, anchorage=(1.01, 1.01))
+    plot_utils.put_legend_outside_plot(ax, anchorage=(1.01, 1.01), prop={'size': 12})
 plt.tight_layout()
 
 plt.show()

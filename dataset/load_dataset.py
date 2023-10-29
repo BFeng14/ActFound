@@ -69,8 +69,7 @@ def read_gdsc():
         ligand_sets_new[k] = v
         for ligand_info in v:
             ligand_info['pic50_exp'] = -math.log10(math.exp(ligand_info['pic50_exp']))
-        # if len(ligand_sets_new) > 200:
-        #     break
+    print(np.mean([len(x) for x in ligand_sets_new.values()]))
     return {"ligand_sets": ligand_sets_new,
             "assays": list(ligand_sets_new.keys())}
 
@@ -294,6 +293,7 @@ def read_chembl_cell_assay_OOD():
     # print(list(kd_assay_set))
     # exit()
     assay_id_dicts_new = {}
+    ligands_num = []
     for assay_id, ligands in assay_id_dicts.items():
         pic50_exp_list = [x["pic50_exp"] for x in ligands]
         pic50_std = np.std(pic50_exp_list)
@@ -301,8 +301,9 @@ def read_chembl_cell_assay_OOD():
             continue
         if len(ligands) < 20:
             continue
+        ligands_num.append(len(ligands))
         assay_id_dicts_new[assay_id] = ligands
-
+    print(np.mean(ligands_num), len(ligands_num))
     assay_ids = list(assay_id_dicts_new.keys())
     return {"ligand_sets": assay_id_dicts_new, "assays": assay_ids}
 
@@ -378,7 +379,7 @@ def read_pQSAR_assay():
 
 def read_bdb_cross():
     BDB_all = read_BDB_per_assay()
-    save_path = '/home/fengbin/dataset/BDB/bdb_split.json'
+    save_path = f'{DATA_PATH}/BDB/bdb_split.json'
     split_name_train_val_test = json.load(open(save_path, "r"))
     repeat_ids = set(
         [x.strip() for x in open(f"{DATA_PATH}/BDB/c2b_repeat", "r").readlines()])
@@ -387,7 +388,7 @@ def read_bdb_cross():
 
 def read_chembl_cross():
     chembl_all = read_chembl_assay()
-    save_path = '/home/fengbin/dataset/chembl/chembl_split.json'
+    save_path = f'{DATA_PATH}/chembl/chembl_split.json'
     split_name_train_val_test = json.load(open(save_path, "r"))
     repeat_ids = set(
         [x.strip() for x in open(f"{DATA_PATH}/chembl/b2c_repeat", "r").readlines()])
@@ -396,4 +397,4 @@ def read_chembl_cross():
 
 
 if __name__ == "__main__":
-    read_FEP_SET()
+    read_gdsc()

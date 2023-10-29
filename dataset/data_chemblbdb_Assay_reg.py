@@ -6,6 +6,7 @@ from torch.utils.data import Dataset, sampler, DataLoader
 import tqdm
 import pickle
 import torch
+
 import dataset.load_dataset as preprocess
 import copy
 from multiprocessing import Pool
@@ -39,19 +40,20 @@ class CHEMBLBDBMetaDataset(BaseMetaDataset):
             os.system(f"mkdir -p {save_dir}")
 
         if datasource == "bdb":
-            save_path = '/home/fengbin/dataset/BDB/bdb_split.json'
+            save_path = f'{preprocess.DATA_PATH}/datas/BDB/bdb_split.json'
             self.split_name_train_val_test = json.load(open(save_path, "r"))
-            davis_repeat_bdb = list([x.strip() for x in open("/home/fengbin/meta_delta/scripts/cross_repeat/bdb_2_davis_repeat", "r").readlines()])
+            davis_repeat_bdb = list([x.strip() for x in open(f"{preprocess.DATA_PATH}/bdb_2_davis_repeat", "r").readlines()])
             print("number of training set before filter:", len(self.split_name_train_val_test['train']))
             fep_repeat_bdb = ["Endothelial-PAS-domain-containing-protein-1/9049_1_1.tsv", "Hepatocyte-growth-factor-receptor/50045505_3_1.tsv",
                                 "Cyclin-C/50047223_1_1.tsv", "Poly-[ADP-ribose]-polymerase-tankyrase-2/50007009_4_1.tsv",
                                 "Kinesin-like-protein-1/50039105_1_1.tsv", "Mitogen-activated-protein-kinase-8/1994_1_1.tsv",
-                                "Mitogen-activated-protein-kinase-14/50033205_13_1.tsv"]
+                                "Mitogen-activated-protein-kinase-14/50033205_13_1.tsv", "Induced-myeloid-leukemia-cell-differentiation-protein-Mcl-1/50042366_3_0.tsv",
+                                "Tyrosine-protein-kinase-SYK/50044388_1_1.tsv", "Protein-tyrosine-phosphatase-1B/50020988_6_0.tsv"]
             self.split_name_train_val_test['train'] = [x for x in self.split_name_train_val_test['train'] if
                                                        x not in set(fep_repeat_bdb + davis_repeat_bdb)]
             print("number of training set after filter:", len(self.split_name_train_val_test['train']))
         else:
-            save_path = '/home/fengbin/dataset/chembl/chembl_split.json'
+            save_path = f'{preprocess.DATA_PATH}/datas/chembl/chembl_split.json'
             self.split_name_train_val_test = json.load(open(save_path, "r"))
 
             fep_repeat_chembl = ['CHEMBL3404455_nM_IC50', 'CHEMBL3270296_nM_IC50',
