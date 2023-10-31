@@ -109,7 +109,7 @@ def get_model_colors(mod=None):
     colors['on_none'] = colors['transfer_qsar']
     colors['on_chembl'] = colors['actfound_fusion']
     colors['on_bdb'] = colors['protonet']
-    colors['FEP+'] = '#b2182b'
+    colors['FEP+(OPLS4)'] = '#b2182b'
 
     return colors[mod]
 

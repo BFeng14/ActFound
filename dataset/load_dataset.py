@@ -131,9 +131,8 @@ def read_kiba():
                 ligands.append(ligand_info)
         if len(ligands) < 20:
             continue
-        stds.append(np.mean(pic50s))
         ligand_sets[f"kiba_{assay_idx}"] = ligands
-    print("stds", np.mean(stds))
+
 
 
     assay_id_dicts_new = {}
@@ -145,6 +144,8 @@ def read_kiba():
         if len(ligands) < 50:
             continue
         assay_id_dicts_new[assay_id] = ligands
+        stds.append(pic50_std)
+    print("stds", np.mean(stds), len(stds))
     return {"ligand_sets": assay_id_dicts_new, "assays": list(assay_id_dicts_new.keys())}
 
 
@@ -174,9 +175,10 @@ def read_davis():
                 ligands.append(ligand_info)
         if len(ligands) < 20:
             continue
-        stds.append(np.std(pic50s))
+        stds.append(len(ligands))
         ligand_sets[f"davis_{assay_idx}"] = ligands
 
+    print("stds", np.mean(stds), len(stds))
     return {"ligand_sets": ligand_sets, "assays": list(ligand_sets.keys())}
 
 
@@ -397,4 +399,4 @@ def read_chembl_cross():
 
 
 if __name__ == "__main__":
-    read_gdsc()
+    read_davis()
