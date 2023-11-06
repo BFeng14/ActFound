@@ -55,3 +55,5 @@ If you want to reproduce the result shown in our paper, we provide all scripts w
 
 ## Citing
 If you use MetaLigand in your work, a citation to our paper is appreciated:
+- DOI: https://doi.org/10.1101/2023.10.30.564861
+- Link to paper: https://www.biorxiv.org/content/10.1101/2023.10.30.564861v1
