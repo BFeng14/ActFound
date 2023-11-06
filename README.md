@@ -54,6 +54,6 @@ We provide all test results on the file test_results_all.tar.gz, which can be us
 If you want to reproduce the result shown in our paper, we provide all scripts we used to run the full test in "./script". You can refer to the correct running script contained in "./script" if you find are not sure about how to run inference. Please feel free to contact me by email if there is any problem with the code or paper: fengbin14@pku.edu.cn.
 
 ## Citing
-If you use MetaLigand in your work, a citation to our paper is appreciated:
+If you use ActFound in your work, a citation to our paper is appreciated:
 - DOI: https://doi.org/10.1101/2023.10.30.564861
 - Link to paper: https://www.biorxiv.org/content/10.1101/2023.10.30.564861v1
