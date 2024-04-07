@@ -8,7 +8,7 @@ This repository contains the code for ActFound: A foundation model for bioactivi
 Compound bioactivity plays an important role in different stages of drug development and discovery. Existing machine learning approaches have poor generalization ability in compound bioactivity prediction due to the small number of compounds in each assay and incompatible measurements among assays. Here, we propose ActFound, a foundation model for bioactivity prediction trained on $2.3$ million experimentally measured bioactivity compounds and $50,869$ assays from ChEMBL and BindingDB. The key idea of ActFound is to employ pairwise learning to learn the relative value differences between two compounds within the same assay to circumvent the incompatibility among assays. ActFound further exploits meta-learning to jointly optimize the model from all assays. On six real-world bioactivity datasets, ActFound demonstrates accurate in-domain prediction and strong generalization across datasets, units, and molecular scaffolds. We also demonstrated that ActFound can be used as an accurate alternative to the leading computational chemistry software FEP+(OPLS4) by achieving comparable performance when only using a few data points for fine-tuning. The promising results of ActFound indicate that ActFound can be an effective foundation model for a wide range of tasks in compound bioactivity prediction, paving the path for machine learning-based drug development and discovery.
 ## Instructions for running the code
 
-### download data
+### Download data
 All data, model checkpoints, and test results are available on the Google Drive.
 - Download Link
     - Google Drive: https://drive.google.com/drive/folders/1x-F_hbQr_pXFEA5qLCkd7dIr9a_1L3aJ?usp=drive_link
@@ -17,6 +17,38 @@ All data, model checkpoints, and test results are available on the Google Drive.
 - For model inference, please download checkpoints_all.tar.gz, extract all files, and put them in the project root.
 - For plot figures in our paper, please download test_results_all.tar.gz, extract all files, put them in the project root, and rename the dir into test_results.
 - Please make sure that "datas", "checkpoints_all"(necessary for inference), "test_results"(necessary for plot) all correctly placed in to project root.
+
+### Reproduce the results in our paper
+#### In-domain bioactivity prediction
+Experiments on ChEMBL and BindingDB datasets:
+```bash
+FIXED_PARAM="--test_sup_num 16 --test_repeat_num 10 --train 0 --test_epoch -1"
+
+CHEMBL_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/chembl/feat.npy --train_assay_idxes ./train_assay_feat/chembl/index.pkl"
+CHEMBL_DIR="./checkpoints_all/checkpoints_chembl"
+CHEMBL_RES="./test_results/result_indomain/chembl"
+python main_reg.py --datasource=chembl --logdir ${CHEMBL_DIR}/checkpoint_chembl_actfound --model_name actfound --test_write_file ${CHEMBL_RES} ${FIXED_PARAM} ${CHEMBL_KNN_MAML} &
+
+BDB_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/bdb/feat.npy --train_assay_idxes ./train_assay_feat/bdb/index.pkl"
+BDB_DIR="./checkpoints_all/checkpoints_bdb"
+BDB_RES="./test_results/result_indomain/bdb"
+python main_reg.py --datasource=bdb --logdir ${BDB_DIR}/checkpoint_bdb_actfound --model_name actfound --test_write_file ${BDB_RES} ${FIXED_PARAM} ${BDB_KNN_MAML} &
+```
+- + **'model_name'**: Specify the method to run, choose between actfound, actfound_transfer, maml, protonet and transfer_qsar
+  + **'test_sup_num'**: Specify the size of support set
+### Run model training
+For ActFound training, please first make sure that the training data is correctly downloaded, and then simply run "main_reg.py". Training of ActFound on ChEMBL takes nearly 3 days, and training on BindingDB takes 30 hours.
+- For training on other datasets, please replace DATA_SOURCE. 
+- For training on other models, please refer to "learning_system/\_\_init__.py", and change the MODEL_NAME.
+
+```bash
+DATA_SOURCE="chembl"
+MODEL_DIR="path_to_save_model_checkpoint"
+MODEL_NAME="actfound"
+python main_reg.py --datasource=${DATA_SOURCE} --logdir ${MODEL_DIR} --model_name ${MODEL_NAME} --test_write_file ${RESULT_FILE} --test_sup_num 16 --test_repeat_num 2 
+```
+
+## 
 
 ### Run model inference
 For model inference only, please download the corresponding file from Google Drive, and simply run "main_reg.py". The checkpoints for models trained on ChEMBL, BindingDB, FS-MOL, and pQSAR-ChEMBL are available on Google Drive. 
@@ -36,17 +68,7 @@ KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/${DATA_SOURCE}/fe
 python main_reg.py --datasource=${DATA_SOURCE} --logdir ${MODEL_DIR} --model_name ${MODEL_NAME} --test_write_file ${RESULT_FILE} --test_sup_num 16 --test_repeat_num 10 --train 0 --test_epoch -1 ${KNN_MAML}
 ```
 
-### Run model training
-For ActFound training, please first make sure that the training data is correctly downloaded, and then simply run "main_reg.py". Training of ActFound on ChEMBL takes nearly 3 days, and training on BindingDB takes 30 hours.
-- For training on other datasets, please replace DATA_SOURCE. 
-- For training on other models, please refer to "learning_system/\_\_init__.py", and change the MODEL_NAME.
 
-```bash
-DATA_SOURCE="chembl"
-MODEL_DIR="path_to_save_model_checkpoint"
-MODEL_NAME="actfound"
-python main_reg.py --datasource=${DATA_SOURCE} --logdir ${MODEL_DIR} --model_name ${MODEL_NAME} --test_write_file ${RESULT_FILE} --test_sup_num 16 --test_repeat_num 2 
-```
 
 ### result on paper reproduce
 We provide all test results on the file test_results_all.tar.gz, which can be used to plot all figures shown in our paper.
