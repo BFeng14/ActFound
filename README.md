@@ -34,8 +34,41 @@ BDB_DIR="./checkpoints_all/checkpoints_bdb"
 BDB_RES="./test_results/result_indomain/bdb"
 python main_reg.py --datasource=bdb --logdir ${BDB_DIR}/checkpoint_bdb_actfound --model_name actfound --test_write_file ${BDB_RES} ${FIXED_PARAM} ${BDB_KNN_MAML} &
 ```
-- + **'model_name'**: Specify the method to run, choose between actfound, actfound_transfer, maml, protonet and transfer_qsar
-  + **'test_sup_num'**: Specify the size of support set
++ **'model_name'**: Specify the method to run, choose between actfound, actfound_transfer, maml, protonet and transfer_qsar
++ **'test_sup_num'**: Specify the size of support set
+Experiments on pQSAR-ChEMBL:
+```bash
+FIXED_PARAM_PQSAR="--test_sup_num 0.75 --test_repeat_num 1 --train 0 --test_epoch -1"
+PQSAR_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/pqsar/feat.npy --train_assay_idxes ./train_assay_feat/pqsar/index.pkl"
+PQSAR_DIR="./checkpoints_all/checkpoints_pqsar"
+PQSAR_RES="./test_results/result_indomain/pqsar"
+python main_reg.py --datasource=pqsar --logdir ${PQSAR_DIR}/checkpoint_pqsar_actfound --model_name actfound --test_write_file ${PQSAR_RES} ${FIXED_PARAM_PQSAR} ${PQSAR_KNN_MAML} &
+```
++ **'model_name'**: Specify the method to run, choose between actfound, actfound_transfer, maml, protonet and transfer_qsar
++ **'test_sup_num'**: Specify the percentage used for fine-tuning
+Experiments on FS-MOL:
+```bash
+FIXED_PARAM_FSMOL="--test_sup_num 16 --test_repeat_num 10 --train 0 --test_epoch -1"
+FSMOL_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/fsmol/feat.npy --train_assay_idxes ./train_assay_feat/fsmol/index.pkl"
+FSMOL_DIR="./checkpoints_all/checkpoints_fsmol"
+FSMOL_RES="./test_results/result_indomain/fsmol"
+python main_reg.py --datasource=kiba --logdir ${FSMOL_DIR}/checkpoint_fsmol_actfound --model_name actfound --test_write_file ${FSMOL_RES} ${FIXED_PARAM_FSMOL} ${FSMOL_KNN_MAML} &
+```
++ **'model_name'**: Specify the method to run, choose among actfound, actfound_transfer, maml, protonet and transfer_qsar
++ **'test_sup_num'**: Specify the size of support set, choose among 16, 32, 64, 128
+Experiments on ChEMBL-Activity:
+```bash
+FIXED_PARAM="--test_sup_num 16 --test_repeat_num 10 --train 0 --test_epoch -1 --expert_test ood"
+
+CHEMBL_DIR="./checkpoints_all/checkpoints_chembl"
+CHEMBL_RES="./test_results/result_ood"
+CHEMBL_RES_TMP="./test_results/result_ood_tmp"
+python main_reg.py --datasource=chembl --logdir ${CHEMBL_DIR}/checkpoint_chembl_actfound --model_name actfound --test_write_file "${CHEMBL_RES_TMP}/normal" ${FIXED_PARAM}
+python main_reg.py --datasource=chembl --logdir ${CHEMBL_DIR}/checkpoint_chembl_actfound --model_name actfound --test_write_file "${CHEMBL_RES_TMP}/inverse" ${FIXED_PARAM} --inverse_ylabel
+python ./combine_inverse_prediction.py
+```
+#### Cross-domain bioactivity prediction
+
 ### Run model training
 For ActFound training, please first make sure that the training data is correctly downloaded, and then simply run "main_reg.py". Training of ActFound on ChEMBL takes nearly 3 days, and training on BindingDB takes 30 hours.
 - For training on other datasets, please replace DATA_SOURCE. 
