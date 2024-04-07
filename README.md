@@ -36,6 +36,7 @@ python main_reg.py --datasource=bdb --logdir ${BDB_DIR}/checkpoint_bdb_actfound 
 ```
 + **'model_name'**: Specify the method to run, choose between actfound, actfound_transfer, maml, protonet and transfer_qsar
 + **'test_sup_num'**: Specify the size of support set
+
 Experiments on pQSAR-ChEMBL:
 ```bash
 FIXED_PARAM_PQSAR="--test_sup_num 0.75 --test_repeat_num 1 --train 0 --test_epoch -1"
@@ -46,6 +47,7 @@ python main_reg.py --datasource=pqsar --logdir ${PQSAR_DIR}/checkpoint_pqsar_act
 ```
 + **'model_name'**: Specify the method to run, choose between actfound, actfound_transfer, maml, protonet and transfer_qsar
 + **'test_sup_num'**: Specify the percentage used for fine-tuning
+
 Experiments on FS-MOL:
 ```bash
 FIXED_PARAM_FSMOL="--test_sup_num 16 --test_repeat_num 10 --train 0 --test_epoch -1"
@@ -56,6 +58,7 @@ python main_reg.py --datasource=kiba --logdir ${FSMOL_DIR}/checkpoint_fsmol_actf
 ```
 + **'model_name'**: Specify the method to run, choose among actfound, actfound_transfer, maml, protonet and transfer_qsar
 + **'test_sup_num'**: Specify the size of support set, choose among 16, 32, 64, 128
+
 Experiments on ChEMBL-Activity:
 ```bash
 FIXED_PARAM="--test_sup_num 16 --test_repeat_num 10 --train 0 --test_epoch -1 --expert_test ood"
@@ -68,8 +71,95 @@ python main_reg.py --datasource=chembl --logdir ${CHEMBL_DIR}/checkpoint_chembl_
 python ./combine_inverse_prediction.py
 ```
 #### Cross-domain bioactivity prediction
+ChEMBL to BindingDB:
+```bash
+FIXED_PARAM="--test_sup_num 16 --test_repeat_num 10 --train 0 --test_epoch -1 --cross_test"
 
-### Run model training
+CHEMBL_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/chembl/feat.npy --train_assay_idxes ./train_assay_feat/chembl/index.pkl"
+CHEMBL_DIR="./checkpoints_all/checkpoints_chembl"
+CHEMBL_RES="./test_results/result_cross/chembl2bdb"
+python main_reg.py --datasource=chembl --logdir ${CHEMBL_DIR}/checkpoint_chembl_actfound --model_name actfound --test_write_file ${CHEMBL_RES} ${FIXED_PARAM} &
+```
+
+BindingDB to ChEMBL:
+```bash
+FIXED_PARAM="--test_sup_num 16 --test_repeat_num 10 --train 0 --test_epoch -1 --cross_test"
+BDB_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/bdb/feat.npy --train_assay_idxes ./train_assay_feat/bdb/index.pkl"
+BDB_DIR="./checkpoints_all/checkpoints_bdb"
+BDB_RES="./test_results/result_cross/bdb2chembl"
+python main_reg.py --datasource=bdb --logdir ${BDB_DIR}/checkpoint_bdb_actfound --model_name actfound --test_write_file ${BDB_RES} ${FIXED_PARAM} &
+```
+
+ChEMBL to DAVIS and BindingDB to DAVIS:
+```bash
+FIXED_PARAM_DAVIS="--test_sup_num 16 --test_repeat_num 10 --train 0 --test_epoch -1 --expert_test davis"
+
+CHEMBL_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/chembl/feat.npy --train_assay_idxes ./train_assay_feat/chembl/index.pkl"
+CHEMBL_DIR="./checkpoints_all/checkpoints_chembl"
+CHEMBL_RES_DAVIS="./test_results/result_cross/chembl2davis"
+python main_reg.py --datasource=chembl --logdir ${CHEMBL_DIR}/checkpoint_chembl_actfound --model_name actfound --test_write_file ${CHEMBL_RES_DAVIS} ${FIXED_PARAM_DAVIS} &
+
+BDB_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/bdb/feat.npy --train_assay_idxes ./train_assay_feat/bdb/index.pkl"
+BDB_DIR="./checkpoints_all/checkpoints_bdb"
+BDB_RES_DAVIS="./test_results/result_cross/bdb2davis"
+python main_reg.py --datasource=bdb --logdir ${BDB_DIR}/checkpoint_bdb_actfound --model_name actfound --test_write_file ${BDB_RES_DAVIS} ${FIXED_PARAM_DAVIS} &
+```
+
+ChEMBL to DAVIS and BindingDB to DAVIS:
+```bash
+CHEMBL_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/chembl/feat.npy --train_assay_idxes ./train_assay_feat/chembl/index.pkl"
+FIXED_PARAM_KIBA="--test_sup_num [16,32,64,128] --test_repeat_num 10 --train 0 --test_epoch -1 --expert_test kiba"
+CHEMBL_DIR="./checkpoints_all/checkpoints_chembl"
+CHEMBL_RES_KIBA="./test_results/result_cross/chembl2kiba"
+python main_reg.py --datasource=chembl --logdir ${CHEMBL_DIR}/checkpoint_chembl_actfound --model_name actfound --test_write_file ${CHEMBL_RES_KIBA} ${FIXED_PARAM_KIBA} &
+
+BDB_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/bdb/feat.npy --train_assay_idxes ./train_assay_feat/bdb/index.pkl"
+BDB_DIR="./checkpoints_all/checkpoints_bdb"
+BDB_RES_KIBA="./test_results/result_cross/bdb2kiba"
+python main_reg.py --datasource=bdb --logdir ${BDB_DIR}/checkpoint_bdb_actfound --model_name actfound --test_write_file ${BDB_RES_KIBA} ${FIXED_PARAM_KIBA} &
+```
+#### FEP prediction
+FEP+(OPLS4) calculation results are unknown:
+```bash
+FIXED_PARAM="--test_sup_num [0.2,0.4,0.6,0.8] --test_repeat_num 40 --train 0 --test_epoch -1 --expert_test fep"
+#[0.2,0.3,0.4,0.5,0.6,0.7,0.8]
+CHEMBL_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/chembl/feat.npy --train_assay_idxes ./train_assay_feat/chembl/index.pkl"
+CHEMBL_DIR="./checkpoints_all/checkpoints_chembl"
+CHEMBL_RES="./test_results/result_fep_new/fep/chembl"
+python main_reg.py --datasource=chembl --logdir ${CHEMBL_DIR}/checkpoint_chembl_actfound --model_name actfound --test_write_file ${CHEMBL_RES} ${FIXED_PARAM} &
+
+BDB_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/bdb/feat.npy --train_assay_idxes ./train_assay_feat/bdb/index.pkl"
+BDB_DIR="./checkpoints_all/checkpoints_bdb"
+BDB_RES="./test_results/result_fep_new/fep/bdb"
+python main_reg.py --datasource=bdb --logdir ${BDB_DIR}/checkpoint_bdb_actfound --model_name actfound --test_write_file ${BDB_RES} ${FIXED_PARAM} ${BDB_KNN_MAML} &
+```
+FEP+(OPLS4) calculation results are known:
+```bash
+FIXED_PARAM="--test_sup_num [0.2,0.4,0.6,0.8] --test_repeat_num 40 --train 0 --test_epoch -1 --expert_test fep_opls4"
+
+CHEMBL_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/chembl/feat.npy --train_assay_idxes ./train_assay_feat/chembl/index.pkl"
+CHEMBL_DIR="./checkpoints_all/checkpoints_chembl"
+CHEMBL_RES="./test_results/result_fep_new/fep_opls4/chembl"
+python main_reg.py --datasource=chembl --logdir ${CHEMBL_DIR}/checkpoint_chembl_actfound --model_name actfound --test_write_file ${CHEMBL_RES} ${FIXED_PARAM} &
+
+BDB_KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/bdb/feat.npy --train_assay_idxes ./train_assay_feat/bdb/index.pkl"
+BDB_DIR="./checkpoints_all/checkpoints_bdb"
+BDB_RES="./test_results/result_fep_new/fep_opls4/bdb"
+python main_reg.py --datasource=bdb --logdir ${BDB_DIR}/checkpoint_bdb_actfound --model_name actfound --test_write_file ${BDB_RES} ${FIXED_PARAM} ${BDB_KNN_MAML} &
+```
+#### Cancer drug response prediction
+```bash
+FIXED_PARAM="--model_name actfound --test_write_file test_results/gdsc --test_repeat_num 1 --metatrain_iterations 80 --input_celline"
+python main_reg.py --datasource=gdsc ${FIXED_PARAM} --logdir ./checkpoints_all/checkpoints_chembl/checkpoint_chembl_actfound --resume 1 --test_epoch -1  --gdsc_pretrain_data chembl
+python main_reg.py --datasource=gdsc ${FIXED_PARAM} --logdir ./checkpoints_all/checkpoints_bdb/checkpoint_bdb_actfound --resume 1 --test_epoch -1  --gdsc_pretrain_data bdb
+python main_reg.py --datasource=gdsc ${FIXED_PARAM}
+```
+
+We provide all test results on the file test_results_all.tar.gz, which can be used to plot all figures shown in our paper.
+
+we also provide all scripts we used to run the full test in "./script". You can refer to the correct running script contained in "./script" 
+### Train ActFound yourself
+#### Run model training
 For ActFound training, please first make sure that the training data is correctly downloaded, and then simply run "main_reg.py". Training of ActFound on ChEMBL takes nearly 3 days, and training on BindingDB takes 30 hours.
 - For training on other datasets, please replace DATA_SOURCE. 
 - For training on other models, please refer to "learning_system/\_\_init__.py", and change the MODEL_NAME.
@@ -81,14 +171,12 @@ MODEL_NAME="actfound"
 python main_reg.py --datasource=${DATA_SOURCE} --logdir ${MODEL_DIR} --model_name ${MODEL_NAME} --test_write_file ${RESULT_FILE} --test_sup_num 16 --test_repeat_num 2 
 ```
 
-## 
-
-### Run model inference
-For model inference only, please download the corresponding file from Google Drive, and simply run "main_reg.py". The checkpoints for models trained on ChEMBL, BindingDB, FS-MOL, and pQSAR-ChEMBL are available on Google Drive. 
-- Note that KNN_MAML is optional for testing, and it will first take about half an hour to run few-shot testing on all assays on ChEMBL(only needed once), and then take another half hour to fully run on the test set of ChEMBL. You can just close it by not setting --knn_maml. One example of running the in-domain test on ChEMBL is given below.
+#### Run model inference
+For model inference, put the checkpoints in "checkpoints_all" and run "main_reg" with "--train 0". 
+- Note that KNN_MAML is optional for testing, and it will first take about half an hour to run few-shot testing on all assays on ChEMBL(only needed once), and then take another half hour to fully run on the test set of ChEMBL. You can just close it by not setting --knn_maml. 
 - For testing the following in-domain setting, please just simply replace the DATA_SCOURCE (e.g. BindingDB), and its corresponding MODEL_DIR.
-- For testing on BindingDB using models trained on ChEMBL, please simply add --cross_test.
-- For testing on another dataset (KIBA, Davis, FEP, fep_opls4, activity) using models trained on ChEMBL, please simply add "--expert_test test_domain_name". (fep_opls4 means that using the result of FEP+(OPLS4) for fine-tuning, and activity means ChEMBL-Activity)
+- For cross-domain testing, please simply add --cross_test.
+- For testing on another dataset (e.g., KIBA, Davis, FEP, fep_opls4, activity), please simply add "--expert_test test_domain_name". (fep_opls4 means that using the result of FEP+(OPLS4) for fine-tuning, and activity means ChEMBL-Activity)
 - For testing using other models (including ActFound(transfer), MAML, ProtoNet, and TransferQSAR), please refer to "learning_system/\_\_init__.py", and change the MODEL_NAME.
 - To get a better result, please run another inference using ActFound(transfer), and fusion the result of ActFound and ActFound(transfer) using "fusion_result.py". The result of our paper utilized both KNN_MAML and the fusion method.
 - For inference on other data sources, please follow the code in "dataset/load_dataset.py" (for example read_FEP_SET), and load your dataset in "dataset/data_chemblbdb_Assay_reg.py".
@@ -101,12 +189,7 @@ KNN_MAML="--knn_maml --train_assay_feat_all ./train_assay_feat/${DATA_SOURCE}/fe
 python main_reg.py --datasource=${DATA_SOURCE} --logdir ${MODEL_DIR} --model_name ${MODEL_NAME} --test_write_file ${RESULT_FILE} --test_sup_num 16 --test_repeat_num 10 --train 0 --test_epoch -1 ${KNN_MAML}
 ```
 
-
-
-### result on paper reproduce
-We provide all test results on the file test_results_all.tar.gz, which can be used to plot all figures shown in our paper.
-
-If you want to reproduce the result shown in our paper, we provide all scripts we used to run the full test in "./script". You can refer to the correct running script contained in "./script" if you find are not sure about how to run inference. Please feel free to contact me by email if there is any problem with the code or paper: fengbin14@pku.edu.cn.
+Please feel free to contact me by email if there is any problem with the code or paper: fengbin14@pku.edu.cn.
 
 ## Citing
 If you use ActFound in your work, a citation to our paper is appreciated:
