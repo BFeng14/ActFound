@@ -1,6 +1,8 @@
 import json
 import math
 import os
+import random
+
 import numpy as np
 from torch.utils.data import Dataset, sampler, DataLoader
 import tqdm
@@ -21,17 +23,11 @@ class CHEMBLBDBMetaDataset(BaseMetaDataset):
         datasource = self.args.datasource
 
         if datasource == "bdb":
-            try:
-                experiment_train = preprocess.read_BDB_per_assay()
-            except:
-                print("********************loading training data failed, please check****************")
-                experiment_train = {"ligand_sets": {}, "assays": []}
+            experiment_train = preprocess.read_BDB_per_assay(self.args)
         elif datasource == "chembl":
-            try:
-                experiment_train = preprocess.read_chembl_assay()
-            except:
-                print("********************loading training data failed, please check****************")
-                experiment_train = {"ligand_sets": {}, "assays": []}
+            experiment_train = preprocess.read_chembl_assay(self.args)
+        elif datasource == "bdb_ic50":
+            experiment_train = preprocess.read_BDB_IC50()
         else:
             print("dataset not exist")
             exit()
@@ -41,43 +37,44 @@ class CHEMBLBDBMetaDataset(BaseMetaDataset):
         ligand_set = experiment_train["ligand_sets"]
         self.n_assays = len(ligand_set)
 
+        print(len(ligand_set))
+
         self.indices = []
         save_dir = '{0}/{1}'.format(self.args.logdir, self.exp_string)
         
         if not os.path.exists(save_dir):
             os.system(f"mkdir -p {save_dir}")
 
-        try:
-            if datasource == "bdb":
-                save_path = f'{preprocess.DATA_PATH}/datas/BDB/bdb_split.json'
-                self.split_name_train_val_test = json.load(open(save_path, "r"))
-                davis_repeat_bdb = list([x.strip() for x in open(f"{preprocess.DATA_PATH}/bdb_2_davis_repeat", "r").readlines()])
-                print("number of training set before filter:", len(self.split_name_train_val_test['train']))
-                fep_repeat_bdb = ["Endothelial-PAS-domain-containing-protein-1/9049_1_1.tsv", "Hepatocyte-growth-factor-receptor/50045505_3_1.tsv",
-                                    "Cyclin-C/50047223_1_1.tsv", "Poly-[ADP-ribose]-polymerase-tankyrase-2/50007009_4_1.tsv",
-                                    "Kinesin-like-protein-1/50039105_1_1.tsv", "Mitogen-activated-protein-kinase-8/1994_1_1.tsv",
-                                    "Mitogen-activated-protein-kinase-14/50033205_13_1.tsv", "Induced-myeloid-leukemia-cell-differentiation-protein-Mcl-1/50042366_3_0.tsv",
-                                    "Tyrosine-protein-kinase-SYK/50044388_1_1.tsv", "Protein-tyrosine-phosphatase-1B/50020988_6_0.tsv"]
-                self.split_name_train_val_test['train'] = [x for x in self.split_name_train_val_test['train'] if
-                                                           x not in set(fep_repeat_bdb + davis_repeat_bdb)]
-                print("number of training set after filter:", len(self.split_name_train_val_test['train']))
-            elif datasource == "chembl":
-                save_path = f'{preprocess.DATA_PATH}/datas/chembl/chembl_split.json'
-                self.split_name_train_val_test = json.load(open(save_path, "r"))
+        if datasource == "bdb":
+            save_path = f'{preprocess.DATA_PATH}/BDB/bdb_split.json'
+            self.split_name_train_val_test = json.load(open(save_path, "r"))
+            davis_repeat_bdb = json.load(open(f"{preprocess.DATA_PATH}/davis_repeat_set_on_bdb_0.95.json", "r"))
+            fep_repeat_bdb = json.load(open(f"{preprocess.DATA_PATH}/fep_repeat_set_on_bdb_0.95.json", "r"))
+            activity_repeat_bdb = json.load(open(f"{preprocess.DATA_PATH}/activity_cliff_repeat_set_on_bdb_nomid_0.95.json", "r"))
 
-                fep_repeat_chembl = ['CHEMBL3404455_nM_IC50', 'CHEMBL3270296_nM_IC50',
-                                     'CHEMBL3779191_nM_IC50', 'CHEMBL4322250_nM_IC50',
-                                     'CHEMBL1101849_nM_IC50',  'CHEMBL860181_nM_IC50',
-                                     'CHEMBL1769102_nM_IC50', 'CHEMBL2390026_nM_Ki',
-                                     'CHEMBL2421816_nM_Ki', 'CHEMBL896126_nM_Ki']
-                davis_repeat_chembl = []
-                print("number of training set before filter:", len(self.split_name_train_val_test['train']))
-                self.split_name_train_val_test['train'] = [x for x in self.split_name_train_val_test['train'] if
-                                                          x not in set(fep_repeat_chembl + davis_repeat_chembl)]
-                print("number of training set after filter:", len(self.split_name_train_val_test['train']))
-        except:
-            print("********************loading data split failed, please check*******************")
-            self.split_name_train_val_test = {"train": [], "valid": [], "test": []}
+            repea_set_bdb = set(davis_repeat_bdb + fep_repeat_bdb + activity_repeat_bdb)
+            print("number of training set before filter:", len(self.split_name_train_val_test['train']))
+            self.split_name_train_val_test['train'] = [x for x in self.split_name_train_val_test['train'] if
+                                                       x not in repea_set_bdb]
+            print("number of training set after filter:", len(self.split_name_train_val_test['train']))
+        elif datasource == "chembl":
+            save_path = f'{preprocess.DATA_PATH}/chembl/chembl_split.json'
+            self.split_name_train_val_test = json.load(open(save_path, "r"))
+            davis_repeat_chembl = json.load(open(f"{preprocess.DATA_PATH}/davis_repeat_set_on_chembl_0.95.json", "r"))
+            fep_repeat_chembl = json.load(open(f"{preprocess.DATA_PATH}/fep_repeat_set_on_chembl_0.95.json", "r"))
+            activity_repeat_chembl = json.load(open(f"{preprocess.DATA_PATH}/activity_cliff_repeat_set_on_chembl_nomid_0.95.json", "r"))
+
+            repea_set_chembl = set(davis_repeat_chembl + fep_repeat_chembl + activity_repeat_chembl)
+            print("number of training set before filter:", len(self.split_name_train_val_test['train']))
+            self.split_name_train_val_test['train'] = [x for x in self.split_name_train_val_test['train'] if
+                                                      x not in repea_set_chembl]
+            print("number of training set after filter:", len(self.split_name_train_val_test['train']))
+        elif datasource == "bdb_ic50":
+            self.split_name_train_val_test = {}
+            assays_name_list = experiment_train["assays"]
+            self.split_name_train_val_test['train'] = [x for x in assays_name_list if not x.startswith('test_')]
+            self.split_name_train_val_test['valid'] = [x for x in assays_name_list if x.startswith('test_')]
+            self.split_name_train_val_test['test'] = []
 
 
         self.Xs = []
@@ -104,15 +101,14 @@ class CHEMBLBDBMetaDataset(BaseMetaDataset):
             elif self.args.expert_test == "ood":
                 experiment_test = preprocess.read_chembl_cell_assay_OOD()
             else:
-                print("no expert_test", self.args.expert_test)
-                exit()
+                raise ValueError("no expert_test", self.args.expert_test)
             ligand_set = {**ligand_set, **experiment_test['ligand_sets']}
             self.split_name_train_val_test['test'] = experiment_test['assays']
         elif self.args.cross_test:
             if datasource == "chembl":
-                experiment_test = preprocess.read_bdb_cross()
+                experiment_test = preprocess.read_bdb_cross(self.args)
             else:
-                experiment_test = preprocess.read_chembl_cross()
+                experiment_test = preprocess.read_chembl_cross(self.args)
             ligand_set = {**ligand_set, **experiment_test['ligand_sets']}
             self.split_name_train_val_test['test'] = experiment_test['assays']
 
@@ -139,6 +135,14 @@ class CHEMBLBDBMetaDataset(BaseMetaDataset):
                 if assay_id in self.split_name_train_val_test['train']:
                     self.train_indices.append(data_cnt)
                     data_cnt += 1
+                    repeat_cnt = len(smiles_list) // 64
+                    for i in range(repeat_cnt):
+                        self.Xs.append(x_tmp)
+                        self.ys.append(y_tmp)
+                        self.smiles_all.append(smiles_list)
+                        self.assaes.append(f"{assay_id}_{i}")
+                        self.train_indices.append(data_cnt)
+                        data_cnt += 1
                 elif assay_id in self.split_name_train_val_test['valid']:
                     self.val_indices.append(data_cnt)
                     data_cnt += 1

@@ -29,6 +29,10 @@ class ActFoundRegressor(RegressorBase):
             x_task = x_task.float().cuda()
             if self.args.inverse_ylabel:
                 y_task = -y_task
+
+            names_weights_copy = None
+            support_loss_each_step = None
+            task_losses = []
             if data_batch_knn is None:
                 names_weights_copy, support_loss_each_step, task_losses = self.inner_loop(x_task, y_task, assay_idx,
                                                                                           split,
@@ -180,10 +184,9 @@ class ActFoundRegressor(RegressorBase):
             preds_all = sup_y_repeat - ddg_pred
             preds_select = torch.gather(preds_all, 0, topk_idx)
             preds = torch.sum(preds_select * embed_sim_matrix_select, dim=0)
-
-            loss = self.robust_square_error(ddg_pred, ddg_real, topk_idx)
+            # loss = self.robust_square_error(ddg_pred, ddg_real, topk_idx) / rescale ** 2
             loss_dg = torch.mean((preds - sup_y) ** 2)
-            loss = loss_dg / rescale**2
+            loss = loss_dg / rescale ** 2
         else:
             ddg_pred_1 = support_value.unsqueeze(-1) - tgt_value.unsqueeze(0)
             ddg_real_1 = sup_y.unsqueeze(-1) - tgt_y.unsqueeze(0)
@@ -191,16 +194,27 @@ class ActFoundRegressor(RegressorBase):
             ddg_real_2 = tgt_y.unsqueeze(-1) - tgt_y.unsqueeze(0)
 
             cross_sim_mat = self.get_sim_matrix(sup_x, tgt_x)
-            _, topk_idx = torch.topk(cross_sim_mat, dim=0, k=cross_sim_mat.shape[0] // 2)
 
-            embed_sim_matrix = self.cossim_matrix(support_features_flat, query_features_flat) / self.temp
-            sup_y_repeat = sup_y.unsqueeze(-1).repeat(1, tgt_num)  # [sup_num, tgt_num]
-            preds_all = sup_y_repeat - ddg_pred_1 * rescale
+            topk_frac = 0.5
+            use_embedding = True
+            if use_embedding:
+                _, topk_idx = torch.topk(cross_sim_mat, dim=0, k=int(cross_sim_mat.shape[0] * topk_frac))
 
-            preds_select = torch.gather(preds_all, 0, topk_idx)
-            embed_sim_matrix_select = torch.gather(embed_sim_matrix, 0, topk_idx)
-            embed_sim_matrix_select = self.softmax(embed_sim_matrix_select)
-            preds = torch.sum(preds_select * embed_sim_matrix_select, dim=0)
+                embed_sim_matrix = self.cossim_matrix(support_features_flat, query_features_flat) / self.temp
+                sup_y_repeat = sup_y.unsqueeze(-1).repeat(1, tgt_num)  # [sup_num, tgt_num]
+                preds_all = sup_y_repeat - ddg_pred_1 * rescale
+
+                preds_select = torch.gather(preds_all, 0, topk_idx)
+                embed_sim_matrix_select = torch.gather(embed_sim_matrix, 0, topk_idx)
+                embed_sim_matrix_select = self.softmax(embed_sim_matrix_select)
+                preds = torch.sum(preds_select * embed_sim_matrix_select, dim=0)
+            else:
+                feat_sim_matrix = cross_sim_mat
+                sup_y_repeat = sup_y.unsqueeze(-1).repeat(1, tgt_num)  # [sup_num, tgt_num]
+                preds_all = sup_y_repeat - ddg_pred_1 * rescale
+
+                embed_sim_matrix_select = self.softmax(feat_sim_matrix)
+                preds = torch.sum(preds_all * embed_sim_matrix_select, dim=0)
 
             tgt_sim_mat = self.get_sim_matrix(tgt_x, tgt_x) - torch.eye(tgt_num).cuda()
             _, tgt_topk_idx = torch.topk(tgt_sim_mat, dim=0, k=tgt_sim_mat.shape[0] // 2)
@@ -244,11 +258,20 @@ class ActFoundRegressor(RegressorBase):
 
     def prepare_knn_maml(self, dataloader):
         self.dataloader = dataloader
-        self.train_assay_feat_all = torch.tensor(np.load(self.args.train_assay_feat_all)).cuda()
         train_assay_names_all = json.load(open(self.args.train_assay_idxes, "r"))
-        assay_names = dataloader.dataset.assaes
-        assay_names_dict = {x: i for i, x in enumerate(assay_names)}
-        self.train_assay_idxes = [assay_names_dict[assay_name] for assay_name in train_assay_names_all]
+        assay_names_dict = {x: i for i, x in enumerate(train_assay_names_all)}
+        assay_feat_all = torch.tensor(np.load(self.args.train_assay_feat_all)).cuda()
+        assay_feat_list = []
+        assay_idx_list = []
+        for i, assay_name in enumerate(dataloader.dataset.assaes):
+            feat_idx = assay_names_dict.get(assay_name, None)
+            if feat_idx is not None:
+                assay_feat_list.append(assay_feat_all[feat_idx])
+                assay_idx_list.append(i)
+
+        self.train_assay_feat_all = torch.stack(assay_feat_list, dim=0)
+        self.train_assay_idxes = assay_idx_list
+
 
     def run_validation_iter_knnmaml(self, data_batch):
         if self.training:

@@ -8,12 +8,19 @@ import json, pickle
 absolute_path = os.path.abspath(__file__)
 DATA_PATH = "/".join(absolute_path.split("/")[:-2]+["datas"])
 
-def read_BDB_per_assay():
+def read_BDB_per_assay(args):
     data_dir = f"{DATA_PATH}/BDB/polymer"
     assays = []
     ligand_sets = {}
     split_cnt = 0
     means = []
+
+    if args.no_fep_lig:
+        fep_datas, _ = read_FEP_SET()
+        fep_lig_set = set()
+        for assay in fep_datas["ligand_sets"].values():
+            for lig_info in assay:
+                fep_lig_set.add(lig_info["smiles"])
 
     for target_name in tqdm(list(os.listdir(data_dir))):
         for assay_file in os.listdir(os.path.join(data_dir, target_name)):
@@ -37,6 +44,10 @@ def read_BDB_per_assay():
                     print("error ic50s:", pic50_exp)
                     continue
                 smiles = line[1]
+                if args.no_fep_lig:
+                    if smiles in fep_lig_set:
+                        print(smiles, "in fep")
+                        continue
                 affis.append(pic50_exp)
                 ligand_info = {
                     "affi_idx": affi_idx,
@@ -57,6 +68,46 @@ def read_BDB_per_assay():
 
     print(np.mean(means))
     print("split_cnt:", split_cnt)
+    return {"ligand_sets": ligand_sets,
+            "assays": list(ligand_sets.keys())}
+
+
+def read_BDB_IC50():
+    data_dir = f"{DATA_PATH}/BDB_baseline"
+    ligand_sets = {}
+    means = []
+
+    for file_name in tqdm(list(os.listdir(data_dir))):
+        assay_name = file_name
+        affi_idx = 1
+        ligands = []
+        affis = []
+        file_lines = list(open(os.path.join(data_dir, file_name), "r").readlines())
+        for i, line in enumerate(file_lines):
+            line = line.strip().split("\t")
+            affi_prefix = ""
+            pic50_exp = line[8+affi_idx].strip()
+            pic50_exp = float(pic50_exp) - 9
+
+            smiles = line[1]
+            affis.append(pic50_exp)
+            ligand_info = {
+                "affi_idx": affi_idx,
+                "affi_prefix": affi_prefix,
+                "smiles": smiles,
+                "pic50_exp": pic50_exp,
+                "domain": "bdb"
+            }
+            ligands.append(ligand_info)
+        pic50_exp_list = [x["pic50_exp"] for x in ligands]
+        pic50_std = np.std(pic50_exp_list)
+        if pic50_std == 0.0:
+            continue
+        if len(ligands) < 20:
+            continue
+        means.append(np.mean([x["pic50_exp"] for x in ligands]))
+        ligand_sets[assay_name] = ligands
+
     return {"ligand_sets": ligand_sets,
             "assays": list(ligand_sets.keys())}
 
@@ -85,8 +136,8 @@ def read_FEP_SET():
         opls4_res = []
         errors = []
         for ligand_info in v:
-            pic50_exp = -float(ligand_info["exp_dg"]) / 1.363 - 9
-            opls4 = -float(ligand_info["pred_dg"]) / 1.363 - 9
+            pic50_exp = -float(ligand_info["exp_dg"]) / 1.379 - 9
+            opls4 = -float(ligand_info["pred_dg"]) / 1.379 - 9
             errors.append(pic50_exp - opls4)
             opls4_res.append(opls4)
             smiles = ligand_info["smiles"]
@@ -151,15 +202,20 @@ def read_kiba():
 
 def read_davis():
     ligand_list = []
+    protein_list = []
     ligands_dict = json.load(open(f"{DATA_PATH}/DeepDTA/data/davis/ligands_can.txt"), object_pairs_hook=OrderedDict)
+    proteins_dict = json.load(open(f"{DATA_PATH}/DeepDTA/data/davis/proteins.txt"), object_pairs_hook=OrderedDict)
     for ligand_id, smiles in ligands_dict.items():
         ligand_list.append((ligand_id, smiles))
+    for protein_id, seq in proteins_dict.items():
+        protein_list.append((protein_id, seq))
     Y = pickle.load(open(f"{DATA_PATH}/DeepDTA/data/davis/Y", "rb"), encoding='bytes').transpose()
     ligand_sets = {}
 
     stds = []
     for assay_idx in range(Y.shape[0]):
         affis = Y[assay_idx]
+        assay_name, seq = protein_list[assay_idx]
         ligands = []
         pic50s = []
         for i, affi in enumerate(affis):
@@ -201,10 +257,17 @@ def read_fsmol_assay(split="train", train_phase=1):
         return datas
 
 
-def read_chembl_assay():
+def read_chembl_assay(args):
     datas = csv.reader(open(f"{DATA_PATH}/chembl/chembl_processed_chembl32.csv", "r"),
                        delimiter=',')
     assay_id_dicts = {}
+
+    if args.no_fep_lig:
+        fep_datas, _ = read_FEP_SET()
+        fep_lig_set = set()
+        for assay in fep_datas["ligand_sets"].values():
+            for lig_info in assay:
+                fep_lig_set.add(lig_info["smiles"])
 
     # kd_assay_set = set()
     for line in datas:
@@ -223,6 +286,10 @@ def read_chembl_assay():
         #     continue
         unit = line[7]
         std_rel = line[5]
+        if args.no_fep_lig:
+            if smiles in fep_lig_set:
+                continue
+
         if std_rel != "=":
             continue
         is_does = unit in ['ug.mL-1', 'ug ml-1', 'mg.kg-1', 'mg kg-1',
@@ -310,6 +377,51 @@ def read_chembl_cell_assay_OOD():
     return {"ligand_sets": assay_id_dicts_new, "assays": assay_ids}
 
 
+def read_activity_cliff_assay():
+    smiles_as_target = csv.reader(open(f"{DATA_PATH}/ACNet/ACNet/ACComponents/ACDataset/data_files/raw_data/all_smiles_target.csv", "r"), delimiter=',')
+
+    assay_dicts = {}
+    for line in list(smiles_as_target)[1:]:
+        smiles = line[0]
+        ki = line[1]
+        tid = line[2]
+
+        pic50_exp = -math.log10(float(ki))
+        ligand_info = {
+            "domain": "activity_cliff",
+            "smiles": smiles,
+            "pic50_exp": pic50_exp,
+            "affi_prefix": ""
+        }
+
+        if tid not in assay_dicts:
+            assay_dicts[tid] = {}
+
+        assay_dicts[tid][smiles] = ligand_info
+
+    data_few = json.load(open(f"{DATA_PATH}/ACNet/ACNet/ACComponents/ACDataset/data_files/generated_datasets/MMP_AC_Few.json", "r"))
+    data_small = json.load(
+        open(f"{DATA_PATH}/ACNet/ACNet/ACComponents/ACDataset/data_files/generated_datasets/MMP_AC_Small.json", "r"))
+    # data_medium = json.load(
+    #     open("../datas/ACNet/ACNet/ACComponents/ACDataset/data_files/generated_datasets/MMP_AC_Medium.json", "r"))
+    data_all = {**data_few, **data_small}#, **data_medium}
+
+    assay_dicts_processed = {}
+    for tid, data in data_all.items():
+        ligands = {}
+        for pair in data:
+            smiles1 = pair["SMILES1"]
+            smiles2 = pair["SMILES2"]
+            ligands[smiles1] = assay_dicts[tid][smiles1]
+            ligands[smiles2] = assay_dicts[tid][smiles2]
+        assay_dicts_processed[tid] = {
+            "ligands": ligands,
+            "pairs": data
+        }
+
+    return assay_dicts_processed
+
+
 def read_pQSAR_assay():
     filename = f"{DATA_PATH}/pQSAR/ci9b00375_si_002.txt"
     compound_filename = f"{DATA_PATH}/pQSAR/ci9b00375_si_003.txt"
@@ -379,8 +491,9 @@ def read_pQSAR_assay():
     return {"ligand_sets": ligand_set,
             "assays": list(ligand_set.keys())}
 
-def read_bdb_cross():
-    BDB_all = read_BDB_per_assay()
+
+def read_bdb_cross(args):
+    BDB_all = read_BDB_per_assay(args)
     save_path = f'{DATA_PATH}/BDB/bdb_split.json'
     split_name_train_val_test = json.load(open(save_path, "r"))
     repeat_ids = set(
@@ -388,15 +501,12 @@ def read_bdb_cross():
     test_ids = [x for x in split_name_train_val_test['test'] if x not in repeat_ids]
     return {"assays": test_ids, "ligand_sets": {aid:BDB_all["ligand_sets"][aid] for aid in test_ids}}
 
-def read_chembl_cross():
-    chembl_all = read_chembl_assay()
+
+def read_chembl_cross(args):
+    chembl_all = read_chembl_assay(args)
     save_path = f'{DATA_PATH}/chembl/chembl_split.json'
     split_name_train_val_test = json.load(open(save_path, "r"))
     repeat_ids = set(
         [x.strip() for x in open(f"{DATA_PATH}/chembl/b2c_repeat", "r").readlines()])
     test_ids = [x for x in split_name_train_val_test['test'] if x not in repeat_ids]
     return {"assays": test_ids, "ligand_sets": {aid:chembl_all["ligand_sets"][aid] for aid in test_ids}}
-
-
-if __name__ == "__main__":
-    read_davis()

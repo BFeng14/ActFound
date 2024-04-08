@@ -131,10 +131,9 @@ class ActFoundTransferRegressor(RegressorBase):
             preds_all = sup_y_repeat - ddg_pred
             preds_select = torch.gather(preds_all, 0, topk_idx)
             preds = torch.sum(preds_select * embed_sim_matrix_select, dim=0)
-
-            loss = self.robust_square_error(ddg_pred, ddg_real, topk_idx)
+            # loss = self.robust_square_error(ddg_pred, ddg_real, topk_idx) / rescale ** 2
             loss_dg = torch.mean((preds - sup_y) ** 2)
-            loss = loss_dg / rescale**2
+            loss = loss_dg / rescale ** 2
         else:
             ddg_pred_1 = support_value.unsqueeze(-1) - tgt_value.unsqueeze(0)
             ddg_real_1 = sup_y.unsqueeze(-1) - tgt_y.unsqueeze(0)

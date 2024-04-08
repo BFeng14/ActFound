@@ -47,7 +47,7 @@ class ProtoNetRegressor(RegressorBase):
         return losses, per_task_target_preds, final_weights, per_task_metrics
 
     def net_forward(self, x, y, split, weights, backup_running_statistics, training, num_step, assay_idx=None,
-                    is_support=False):
+                    is_support=False, **kwargs):
         out = self.regressor.forward(x=x, split=split, params=weights,
                                      training=training,
                                      backup_running_statistics=backup_running_statistics,

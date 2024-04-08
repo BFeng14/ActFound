@@ -34,7 +34,7 @@ def get_args():
 
     parser.add_argument('--test_write_file', default="./test_result_debug/", type=str)
     parser.add_argument('--expert_test', default="", type=str)
-    parser.add_argument('--scaffold_split', default=False, action='store_true')
+    parser.add_argument('--similarity_cut', default=1., type=float)
 
     parser.add_argument('--train_seed', default=1111, type=int, help='train_seed')
     parser.add_argument('--val_seed', default=1111, type=int, help='val_seed')
@@ -66,7 +66,7 @@ def get_args():
     parser.add_argument('--input_celline', default=False, action='store_true')
     parser.add_argument('--cell_line_feat', default='./datas/gdsc/cellline_to_feat.pkl')
     parser.add_argument('--cross_test', default=False, action='store_true')
-    parser.add_argument('--gdsc_pretrain_data', default="none", type=str)
+    parser.add_argument('--gdsc_pretrain', default="none", type=str)
     parser.add_argument('--use_byhand_lr', default=False, action='store_true')
 
     parser.add_argument('--inverse_ylabel', default=False, action='store_true')
@@ -76,6 +76,9 @@ def get_args():
     parser.add_argument('--knn_dist_thres', default=0.3, type=float)
     parser.add_argument('--begin_lrloss_epoch', default=50, type=int)
     parser.add_argument('--lrloss_weight', default=35., type=float)
+    parser.add_argument('--no_fep_lig', default=False, action='store_true')
+    parser.add_argument('--act_cliff_test', default=False, action='store_true')
+
     return parser
 
 
@@ -116,7 +119,7 @@ def train(args, model, dataloader):
             # torch.save(model.state_dict(), './scripts/gdsc/checkpoints/model_{}'.format(epoch))
             if last_test_result < test_result:
                 last_test_result = test_result
-                write_dir = os.path.join(args.test_write_file, "on_"+args.gdsc_pretrain_data)
+                write_dir = os.path.join(args.test_write_file, "on_"+args.gdsc_pretrain)
                 if not os.path.exists(write_dir):
                     os.system(f"mkdir -p {write_dir}")
                 json.dump(res_dict, open(os.path.join(write_dir, f"sup_num_{args.test_sup_num}.json"), "w"))
@@ -133,7 +136,7 @@ def train(args, model, dataloader):
 
 def test(args, epoch, model, dataloader, is_test=True):
     kname = "layer_dict.linear.weights".replace(".", "-")
-    print(model.inner_loop_optimizer.names_learning_rates_dict[kname])
+    # print(model.inner_loop_optimizer.names_learning_rates_dict[kname])
     cir_num = args.test_repeat_num
     r2_list = []
     R2os_list = []
@@ -299,6 +302,6 @@ if __name__ == '__main__':
 
     datasource = args.datasource
     if args.datasource == "gdsc":
-        datasource = args.gdsc_pretrain_data
+        datasource = args.gdsc_pretrain
     exp_string = f'data_{datasource}.mbs_{args.meta_batch_size}.metalr_0.00015.innerlr_{args.update_lr}'
     main()

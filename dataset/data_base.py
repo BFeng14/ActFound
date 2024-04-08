@@ -2,12 +2,77 @@ import math
 import os
 import numpy as np
 from torch.utils.data import Dataset, sampler, DataLoader
-
+from typing import Dict, List, Set, Tuple, Union
 import torch
 import random
+from collections import defaultdict
 from rdkit import Chem
-from rdkit.Chem import rdFingerprintGenerator
 from rdkit import DataStructs
+from rdkit.Chem import rdFingerprintGenerator
+from rdkit.Chem.Scaffolds import MurckoScaffold
+
+
+def make_mol(s: str, keep_h: bool, add_h: bool, keep_atom_map: bool):
+    """
+    Builds an RDKit molecule from a SMILES string.
+
+    :param s: SMILES string.
+    :param keep_h: Boolean whether to keep hydrogens in the input smiles. This does not add hydrogens, it only keeps them if they are specified.
+    :param add_h: Boolean whether to add hydrogens to the input smiles.
+    :param keep_atom_map: Boolean whether to keep the original atom mapping.
+    :return: RDKit molecule.
+    """
+    params = Chem.SmilesParserParams()
+    params.removeHs = not keep_h if not keep_atom_map else False
+    mol = Chem.MolFromSmiles(s, params)
+
+    if add_h:
+        mol = Chem.AddHs(mol)
+
+    if keep_atom_map:
+        atom_map_numbers = tuple(atom.GetAtomMapNum() for atom in mol.GetAtoms())
+        for idx, map_num in enumerate(atom_map_numbers):
+            if idx + 1 != map_num:
+                new_order = np.argsort(atom_map_numbers).tolist()
+                return Chem.rdmolops.RenumberAtoms(mol, new_order)
+
+    return mol
+
+
+def generate_scaffold(mol: Union[str, Chem.Mol, Tuple[Chem.Mol, Chem.Mol]], include_chirality: bool = False) -> str:
+    """
+    Computes the Bemis-Murcko scaffold for a SMILES string.
+    :param mol: A SMILES or an RDKit molecule.
+    :param include_chirality: Whether to include chirality in the computed scaffold..
+    :return: The Bemis-Murcko scaffold for the molecule.
+    """
+    if isinstance(mol, str):
+        mol = make_mol(mol, keep_h=False, add_h=False, keep_atom_map=False)
+    if isinstance(mol, tuple):
+        mol = mol[0]
+    scaffold = MurckoScaffold.MurckoScaffoldSmiles(mol=mol, includeChirality=include_chirality)
+
+    return scaffold
+
+
+def scaffold_to_smiles(mols: Union[List[str], List[Chem.Mol], List[Tuple[Chem.Mol, Chem.Mol]]],
+                       use_indices: bool = False) -> Dict[str, Union[Set[str], Set[int]]]:
+    """
+    Computes the scaffold for each SMILES and returns a mapping from scaffolds to sets of smiles (or indices).
+    :param mols: A list of SMILES or RDKit molecules.
+    :param use_indices: Whether to map to the SMILES's index in :code:`mols` rather than
+                        mapping to the smiles string itself. This is necessary if there are duplicate smiles.
+    :return: A dictionary mapping each unique scaffold to all SMILES (or indices) which have that scaffold.
+    """
+    scaffolds = defaultdict(set)
+    for i, mol in enumerate(mols):
+        scaffold = generate_scaffold(mol)
+        if use_indices:
+            scaffolds[scaffold].add(i)
+        else:
+            scaffolds[scaffold].add(mol)
+
+    return scaffolds
 
 
 def preprocess_assay(in_data):
@@ -29,8 +94,8 @@ def preprocess_assay(in_data):
         if mol is None:
             continue
         fingerprints_vect = rdFingerprintGenerator.GetCountFPs(
-                [mol], fpType=rdFingerprintGenerator.MorganFP
-            )[0]
+            [mol], fpType=rdFingerprintGenerator.MorganFP
+        )[0]
         fp_numpy = np.zeros((0,), np.int8)  # Generate target pointer to fill
         DataStructs.ConvertToNumpyArray(fingerprints_vect, fp_numpy)
         pic50_exp = line["pic50_exp"]
@@ -44,13 +109,15 @@ def preprocess_assay(in_data):
         return None
     return x_tmp, affis, smiles_list
 
+
 class BaseMetaDataset(Dataset):
     def __init__(self, args, exp_string):
         self.args = args
         self.current_set_name = "train"
         self.exp_string = exp_string
 
-        self.init_seed = {"train": args.train_seed, "val": args.val_seed, 'test': args.test_seed, 'train_weight': args.train_seed}
+        self.init_seed = {"train": args.train_seed, "val": args.val_seed, 'test': args.test_seed,
+                          'train_weight': args.train_seed}
         self.batch_size = args.meta_batch_size
 
         self.train_index = 0
@@ -64,24 +131,81 @@ class BaseMetaDataset(Dataset):
     def load_dataset(self):
         raise NotImplementedError
 
-    def get_split(self, X_in, y_in, is_test=False, sup_num=None, scaffold_split=None, y_opls4=None, rand_seed=None):
+    def get_split(self, X_in, y_in, is_test=False, sup_num=None, scaffold_split=None, y_opls4=None, rand_seed=None,
+                  smiles=None):
         def data_split(data_len, sup_num_, rng_):
             if not is_test:
                 min_num = math.log10(max(10, int(0.3 * data_len)))
                 max_num = math.log10(int(0.85 * data_len))
                 # todo:for few-shot setting
                 sup_num_ = random.uniform(min_num, max_num)
-                # sup_num_ = max_num
                 sup_num_ = math.floor(10 ** sup_num_)
             split = [1] * sup_num_ + [0] * (data_len - sup_num_)
             rng_.shuffle(split)
             return np.array(split)
 
-        ## 注意，这里的bug会导致测试的时候，test 样本过少（主要是对于数据特别多的样本）
+        def data_split_byvalue(y, sup_num_):
+            sup_index = np.argpartition(y, sup_num_)[:sup_num_].tolist()
+            split = []
+            for i in range(len(y)):
+                if i in sup_index:
+                    split.append(1)
+                else:
+                    split.append(0)
+            return np.array(split)
+
+        def data_split_bysaffold(smiles, sup_num_):
+            scaffold_dict = scaffold_to_smiles(smiles, use_indices=True)
+            scaffold_id_list = [(k, v) for k, v in scaffold_dict.items()]
+            scaffold_id_list = sorted(scaffold_id_list, key=lambda x: len(x[1]))
+            idx_list_all = []
+            for scaffold, idx_list in scaffold_id_list:
+                idx_list_all += idx_list
+
+            sup_index = idx_list_all[:sup_num_]
+            split = []
+            for i in range(len(y)):
+                if i in sup_index:
+                    split.append(1)
+                else:
+                    split.append(0)
+            return np.array(split)
+
+        def data_split_bysim(Xs, sup_num_, rng_, sim_cut_):
+            def get_sim_matrix(a, b):
+                a_bool = (a > 0.).float()
+                b_bool = (b > 0.).float()
+                and_res = torch.mm(a_bool, b_bool.transpose(0, 1))
+                or_res = a.shape[-1] - torch.mm((1. - a_bool), (1. - b_bool).transpose(0, 1))
+                sim = and_res / or_res
+                return sim
+
+            Xs_torch = torch.tensor(Xs).cuda()
+            sim_matrix = get_sim_matrix(Xs_torch, Xs_torch).cpu().numpy() - np.eye(len(Xs))
+            split = [1] * sup_num_ + [0] * (len(Xs) - sup_num_)
+            rng_.shuffle(split)
+            sup_index = [i for i, t in enumerate(split) if t == 1]
+
+            split = []
+            for i in range(len(y)):
+                if i in sup_index:
+                    split.append(1)
+                else:
+                    max_sim = np.max(sim_matrix[i][sup_index])
+                    if max_sim >= sim_cut_:
+                        split.append(-1)
+                    else:
+                        split.append(0)
+            return np.array(split)
+
+        # if np.std(y_in) > 0:
+        #     y_in = (np.array(y_in) - np.mean(y_in)) / np.std(y_in)
+        # else:
+        #     y_in = np.array(y_in) - np.mean(y_in)
         rng = np.random.RandomState(seed=rand_seed)
-        if len(X_in) > 512 and not is_test:
+        if len(X_in) > 64 and not is_test and self.args.datasource != 'gdsc':
             assert y_opls4 is None
-            subset_num = 512
+            subset_num = 64
             raw_data_len = len(X_in)
             select_idx = [1] * subset_num + [0] * (raw_data_len - subset_num)
             rng.shuffle(select_idx)
@@ -94,10 +218,17 @@ class BaseMetaDataset(Dataset):
         if sup_num <= 1:
             sup_num = sup_num * len(X)
         sup_num = int(sup_num)
-        split = data_split(len(X), sup_num, rng)
+        if self.args.similarity_cut < 1.:
+            assert is_test
+            split = data_split_bysim(X, sup_num, rng, self.args.similarity_cut)
+            X = np.array([t for i, t in enumerate(X) if split[i] != -1])
+            y = [t for i, t in enumerate(y) if split[i] != -1]
+            split = np.array([t for i, t in enumerate(split) if t != -1], dtype=np.int)
+        else:
+            split = data_split(len(X), sup_num, rng)
         if y_opls4 is not None:
             assert len(y_opls4) == len(y)
-            y = (1-split)*y + split*np.array(y_opls4)
+            y = (1 - split) * y + split * np.array(y_opls4)
 
         return [X, y, split]
 
@@ -109,7 +240,7 @@ class BaseMetaDataset(Dataset):
         ligands_all = []
 
         if current_set_name == 'train':
-            si_list = self.train_indices[idx*self.batch_size: (idx+1)*self.batch_size]
+            si_list = self.train_indices[idx * self.batch_size: (idx + 1) * self.batch_size]
             ret_weight = [1. for _ in si_list]
         elif current_set_name == 'val':
             si_list = [self.val_indices[idx]]
@@ -119,8 +250,8 @@ class BaseMetaDataset(Dataset):
             ret_weight = [1.]
         elif current_set_name == 'train_weight':
             if self.idxes is not None:
-                si_list = self.idxes[idx*self.weighted_batch: (idx+1)*self.weighted_batch]
-                ret_weight = self.train_weight[idx*self.weighted_batch: (idx+1)*self.weighted_batch]
+                si_list = self.idxes[idx * self.weighted_batch: (idx + 1) * self.weighted_batch]
+                ret_weight = self.train_weight[idx * self.weighted_batch: (idx + 1) * self.weighted_batch]
             else:
                 si_list = [self.train_indices[idx]]
                 ret_weight = [1.]
@@ -140,7 +271,8 @@ class BaseMetaDataset(Dataset):
                                         is_test=current_set_name in ['test', 'val', 'train_weight'],
                                         scaffold_split=scaffold_split,
                                         y_opls4=y_opls4,
-                                        rand_seed=self.init_seed[current_set_name] + si + self.current_epoch))
+                                        rand_seed=self.init_seed[current_set_name] + si + self.current_epoch,
+                                        smiles=self.smiles_all[si]))
             assay.append(assay_name)
             ligands_all.append(self.smiles_all[si])
 
@@ -166,12 +298,12 @@ class BaseMetaDataset(Dataset):
     def set_train_weight(self, train_weight=None, idxes=None, weighted_batch=1):
         self.train_weight = train_weight
         self.idxes = idxes
-        self.weighted_batch=weighted_batch
+        self.weighted_batch = weighted_batch
 
     def switch_set(self, set_name, current_epoch=0):
         self.current_set_name = set_name
         self.current_epoch = current_epoch
-        if set_name == "train" :
+        if set_name == "train":
             rng = np.random.RandomState(seed=self.init_seed["train"] + current_epoch)
             rng.shuffle(self.train_indices)
 
@@ -205,8 +337,8 @@ class SystemDataLoader(object):
         Returns a data loader with the correct set (train, val or test), continuing from the current iter.
         :return:
         """
-        return DataLoader(self.dataset, batch_size=1, num_workers=2, shuffle=False, drop_last=True, collate_fn=my_collate_fn)
-
+        return DataLoader(self.dataset, batch_size=1, num_workers=2, shuffle=False, drop_last=True,
+                          collate_fn=my_collate_fn)
 
     def get_dataloader(self):
         """
@@ -232,7 +364,6 @@ class SystemDataLoader(object):
         self.dataset.set_train_weight(weights, idxes, weighted_batch=weighted_batch)
         self.total_train_epochs += 1
         return self.get_dataloader()
-
 
     def get_train_batches(self, total_batches=-1):
         """
