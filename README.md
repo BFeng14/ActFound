@@ -15,6 +15,7 @@ All data, model checkpoints, and test results are available on the Google Drive.
     - Figshare: https://figshare.com/articles/dataset/ActFound_data/24452680
 - Please first download all files necessary, and unzip them all. Please put "datas" dir under the project root, so that the code can find it during running.
 - For model inference, please download checkpoints_all.tar.gz, extract all files, and put them in the project root.
+- To use models trained with strict data leakage processing method (all compounds in FEP benchmarks are excluded and correlation ($\rho_P$) threshold of data leakage is 0.95), please download checkpoints_bdb_nofep.tar.gz and checkpoints_chembl_nofep.tar.gz from google drive, extract them all and put the extracted dir into "checkpoints_all".
 - For plot figures in our paper, please download test_results_all.tar.gz, extract all files, put them in the project root, and rename the dir into test_results.
 - Please make sure that "datas", "checkpoints_all"(necessary for inference), "test_results"(necessary for plot) all correctly placed in to project root.
 
