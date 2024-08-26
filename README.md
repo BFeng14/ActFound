@@ -7,11 +7,7 @@ This repository contains the code for ActFound (now published on Nature Machine 
 - Link to this paper: https://www.nature.com/articles/s42256-024-00876-w
 - Free share link: https://rdcu.be/dQUav
 
-## Abstract
-Compound bioactivity plays an important role in drug development and discovery. Existing machine learning approaches have poor generalization ability in compound bioactivity prediction due to the small number of compounds in each assay and incompatible measurements among assays. In this paper, we propose ActFound, a bioactivity foundation model trained on 1.6 million experimentally measured bioactivities and 35,644 assays from ChEMBL. The key idea of ActFound is to employ pairwise learning to learn the relative value differences between two compounds within the same assay to circumvent the incompatibility among assays. ActFound further exploits meta-learning to jointly optimize the model from all assays. On six real-world bioactivity datasets, ActFound demonstrates accurate in-domain prediction and strong generalization across datasets, assay types, and molecular scaffolds. We also demonstrated that ActFound can be used as an accurate alternative to the leading physics-based computational tool FEP+(OPLS4) by achieving comparable performance when only using a few data points for fine-tuning. The promising results of ActFound indicate that ActFound can be an effective bioactivity foundation model for a wide range of tasks in compound bioactivity prediction, paving the path for machine learning-based drug development and discovery.
-## Instructions for runing Actfound
-
-### Colab programmatic tool
+## Colab programmatic tool
 ⭐ We have now added a ready-to-use online programmatic tool on Colab.
 
 😊 You can easily use Colab tools to fine-tune Actfound with few measured compounds and then use it to give prediction on your unmeasured compounds.
@@ -19,6 +15,10 @@ Compound bioactivity plays an important role in drug development and discovery. 
 ❤️ We also provide a metric in this colab to help you predict if Actfound can works well on your data with only few measured compounds for fine-tuning. (See Figure 3.g.h of our paper for more detailes)
 
 https://colab.research.google.com/drive/1zn3U3xwLXZjZQYGVgtxCiEwt1hkho62l?usp=sharing 
+
+## Abstract
+Compound bioactivity plays an important role in drug development and discovery. Existing machine learning approaches have poor generalization ability in compound bioactivity prediction due to the small number of compounds in each assay and incompatible measurements among assays. In this paper, we propose ActFound, a bioactivity foundation model trained on 1.6 million experimentally measured bioactivities and 35,644 assays from ChEMBL. The key idea of ActFound is to employ pairwise learning to learn the relative value differences between two compounds within the same assay to circumvent the incompatibility among assays. ActFound further exploits meta-learning to jointly optimize the model from all assays. On six real-world bioactivity datasets, ActFound demonstrates accurate in-domain prediction and strong generalization across datasets, assay types, and molecular scaffolds. We also demonstrated that ActFound can be used as an accurate alternative to the leading physics-based computational tool FEP+(OPLS4) by achieving comparable performance when only using a few data points for fine-tuning. The promising results of ActFound indicate that ActFound can be an effective bioactivity foundation model for a wide range of tasks in compound bioactivity prediction, paving the path for machine learning-based drug development and discovery.
+## Instructions for runing Actfound
 
 ### Download data
 All data, model checkpoints, and test results are available on the Google Drive.
