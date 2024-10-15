@@ -22,7 +22,7 @@ This repository contains the code for ActFound (now published on Nature Machine 
 
     - https://colab.research.google.com/drive/1eLWidAOWUqSCEcm0qM0Pf4IO1Ex7Ceal?usp=sharing
 
-- Colab for finetuning full parameters of Actfound (can be more suitable when you have many measured compounds for finetuning, e.g. more than 300)
+- Colab for finetuning full parameters of Actfound (can be more suitable when you have many measured compounds for finetuning, e.g. more than 100)
 
     - https://colab.research.google.com/drive/1EPx2tMHIdvhPbY8GyvuICVwVgwd3ikfJ?usp=sharing
 
