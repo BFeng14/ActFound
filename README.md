@@ -5,7 +5,7 @@
 This repository contains the code for ActFound (now published on Nature Machine Intelligence): A bioactivity foundation model using pairwise meta-learning.
 
 - Link to this paper: https://www.nature.com/articles/s42256-024-00876-w
-- Free share link: https://rdcu.be/dQUav
+- Free share link to paper(NMI version): https://rdcu.be/dQUav
 
 ## Colab programmatic tool
 ⭐ We have now added a ready-to-use online programmatic tool on Colab.
